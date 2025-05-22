@@ -29,8 +29,8 @@ def upload_files():
         return jsonify({'error': 'Nenhum arquivo CSV ou Excel foi enviado'}), 400
 
     # pega os objetos de requisição
-    csv_file = request.files['csv_file']
-    excel_file = request.files['excel_file']
+    csv_file = request.files.get['csv']
+    excel_file = request.files.get['excel']
 
     # Verifica se os nomes dos arquivos não estão vazios (o que significa que um arquivo foi realmente selecionado)
     if csv_file.filename == '' or excel_file.filename == '':
@@ -52,30 +52,22 @@ def upload_files():
         csv_file.save(csv_filepath)
         excel_file.save(excel_filepath)
 
-        # Retorna uma resposta de sucesso com os caminhos dos arquivos
-        return jsonify({'message': 'Arquivos CSV e Excel enviados com sucesso.', 'csv_filepath': csv_filepath, 'excel_filepath': excel_filepath}), 200
+        # Utilizando o pandas para ler os dois arquivos
+        csv_file = pd.read_csv("uploads/csv.csv", sep=";")
+        excel_file = pd.read_excel("uploads/Planilha1.xlsx")
+
+        # Compara a string da coluna 'cliente' do csv com a coluna 'NOME' do excel e mostra a probabilidade de serem iguais
+        for nome_csv in csv_file['Cliente']:
+            for nome_excel in excel_file['NOME']:
+                ratio = fuzz.ratio(str(nome_csv), str(nome_excel))
+                if ratio > 90:
+                    return jsonify({'message': 'Os nomes batem'})
+                else:
+                    return jsonify({'message': 'Os nomes não batem'})
 
     except Exception as e:
         # Se algo falhou que não foi pego pelas verificações anteriores
         return jsonify({'error': f'Erro desconhecido ao processar o upload dos arquivos: {str(e)}'}), 500
-
-# Rota para mostrar na pagina inicial do navegador se deu certo ou não
-
-
-@app.route("/teste")
-def compara():
-
-    csv_file = pd.read_csv("uploads/csv.csv", sep=";")
-    excel_file = pd.read_excel("uploads/Planilha1.xlsx")
-
-    # Compara a string da coluna 'cliente' do csv com a coluna 'NOME' do excel e mostra a probabilidade de serem iguais
-    for nome_csv in csv_file['Cliente']:
-        for nome_excel in excel_file['NOME']:
-            ratio = fuzz.ratio(str(nome_csv), str(nome_excel))
-            if ratio > 90:
-                return jsonify({'message': 'Os nomes batem'})
-            else:
-                return jsonify({'message': 'Os nomes não batem'})
 
 
 if __name__ == "__main__":
