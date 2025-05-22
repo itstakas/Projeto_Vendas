@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 from rapidfuzz import fuzz
 
 app = Flask(__name__)
-CORS(app)  # habilita o cors e permite requisições no front (que não foi feita AINDA)
+CORS(app)  # habilita o cors e permite requisições no front
 
 # config para upload de arquivos
 UPLOAD_FOLDER = 'uploads'
@@ -20,17 +20,17 @@ def hello_world():
     return 'Olá, backend do Flask'
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=["POST"])
 def upload_files():
 
+     # pega os objetos de requisição
+    csv_file = request.files.get('csv')
+    excel_file = request.files.get('excel')
+    
     # Verifica se 'csv_file' e 'excel_file' estão sendo requisitados
-    if 'csv_file' not in request.files or 'excel_file' not in request.files:
+    if 'csv' not in request.files or 'excel' not in request.files:
         # Retorna uma mensagem de erro
         return jsonify({'error': 'Nenhum arquivo CSV ou Excel foi enviado'}), 400
-
-    # pega os objetos de requisição
-    csv_file = request.files.get['csv']
-    excel_file = request.files.get['excel']
 
     # Verifica se os nomes dos arquivos não estão vazios (o que significa que um arquivo foi realmente selecionado)
     if csv_file.filename == '' or excel_file.filename == '':
@@ -53,12 +53,12 @@ def upload_files():
         excel_file.save(excel_filepath)
 
         # Utilizando o pandas para ler os dois arquivos
-        csv_file = pd.read_csv("uploads/csv.csv", sep=";")
-        excel_file = pd.read_excel("uploads/Planilha1.xlsx")
+        csv_data = pd.read_csv(csv_filepath, sep=";")
+        excel_data = pd.read_excel(excel_filepath)
 
         # Compara a string da coluna 'cliente' do csv com a coluna 'NOME' do excel e mostra a probabilidade de serem iguais
-        for nome_csv in csv_file['Cliente']:
-            for nome_excel in excel_file['NOME']:
+        for nome_csv in csv_data['Cliente']:
+            for nome_excel in excel_data['NOME']:
                 ratio = fuzz.ratio(str(nome_csv), str(nome_excel))
                 if ratio > 90:
                     return jsonify({'message': 'Os nomes batem'})

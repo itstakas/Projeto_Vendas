@@ -44,11 +44,11 @@
       async enviarArquivos(){
         try{
           const formData = new FormData();
-          formData.append('csv', this.csv_file)
-          formData.append('excel', this.excel_file)
+          formData.append('csv', this.arquivoCsv)
+          formData.append('excel', this.arquivoExcel)
 
           const response = await axios.post('http://127.0.0.1:5000/upload', formData, {headers: {
-            'content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data'
           }
         })
 
