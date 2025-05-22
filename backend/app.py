@@ -14,9 +14,11 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
 @app.route("/")
 def hello_world():
     return 'Olá, backend do Flask'
+
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
@@ -57,19 +59,24 @@ def upload_files():
         # Se algo falhou que não foi pego pelas verificações anteriores
         return jsonify({'error': f'Erro desconhecido ao processar o upload dos arquivos: {str(e)}'}), 500
 
-#Rota para mostrar na pagina inicial do navegador se deu certo ou não
-@app.route("/teste")
-def compara():   
+# Rota para mostrar na pagina inicial do navegador se deu certo ou não
 
-    csv_file = pd.read_csv("uploads/csv.csv")
+
+@app.route("/teste")
+def compara():
+
+    csv_file = pd.read_csv("uploads/csv.csv", sep=";")
     excel_file = pd.read_excel("uploads/Planilha1.xlsx")
 
-    #Compara a string da coluna 'cliente' do csv com a coluna 'NOME' do excel e mostra a probabilidade de serem iguais
+    # Compara a string da coluna 'cliente' do csv com a coluna 'NOME' do excel e mostra a probabilidade de serem iguais
     for nome_csv in csv_file['Cliente']:
         for nome_excel in excel_file['NOME']:
             ratio = fuzz.ratio(str(nome_csv), str(nome_excel))
-            if ratio > 80:
-                print('Ok deu tudo certo')
+            if ratio > 90:
+                return jsonify({'message': 'Os nomes batem'})
+            else:
+                return jsonify({'message': 'Os nomes não batem'})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
