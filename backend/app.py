@@ -1,15 +1,16 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pandas as pd
 import os
 from werkzeug.utils import secure_filename
-from rapidfuzz import fuzz
+from classes.Classes import ProcessaDados
+import pandas as pd
+from flask import send_file
 
 app = Flask(__name__)
 CORS(app)  # habilita o cors e permite requisições no front
 
 # config para upload de arquivos
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads'))
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -23,10 +24,10 @@ def hello_world():
 @app.route('/upload', methods=["POST"])
 def upload_files():
 
-     # pega os objetos de requisição
+    # pega os objetos de requisição
     csv_file = request.files.get('csv')
     excel_file = request.files.get('excel')
-    
+
     # Verifica se 'csv_file' e 'excel_file' estão sendo requisitados
     if 'csv' not in request.files or 'excel' not in request.files:
         # Retorna uma mensagem de erro
@@ -43,31 +44,46 @@ def upload_files():
         excel_filename = secure_filename(excel_file.filename)
 
         # Cria os caminhos completos para salvar os arquivos na pasta UPLOAD_FOLDER
-        csv_filepath = os.path.join(
-            app.config['UPLOAD_FOLDER'], csv_file.filename)
-        excel_filepath = os.path.join(
-            app.config['UPLOAD_FOLDER'], excel_file.filename)
+        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], csv_filename)
+        excel_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_filename)
 
         # Salva os arquivos no disco
-        csv_file.save(csv_filepath)
-        excel_file.save(excel_filepath)
+        csv_file.save(csv_path)
+        excel_file.save(excel_path)
 
-        # Utilizando o pandas para ler os dois arquivos
-        csv_data = pd.read_csv(csv_filepath, sep=";")
-        excel_data = pd.read_excel(excel_filepath)
+        processador = ProcessaDados(csv_path, excel_path)
+        processador.comparar_e_preencher()
+        caminho_saida = os.path.join(
+            app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
+        
+        processador.salvar_excel_preenchido(caminho_saida)
 
-        # Compara a string da coluna 'cliente' do csv com a coluna 'NOME' do excel e mostra a probabilidade de serem iguais
-        for nome_csv in csv_data['Cliente']:
-            for nome_excel in excel_data['NOME']:
-                ratio = fuzz.ratio(str(nome_csv), str(nome_excel))
-                if ratio > 90:
-                    return jsonify({'message': 'Os nomes batem'})
-                else:
-                    return jsonify({'message': 'Os nomes não batem'})
+        return jsonify({
+            'message': 'Processamento concluido com sucesso',
+            'arquivo_gerado': True
+        })
 
     except Exception as e:
+
+        print(f"Erro ao processar arquivos: {str(e)}")
         # Se algo falhou que não foi pego pelas verificações anteriores
         return jsonify({'error': f'Erro desconhecido ao processar o upload dos arquivos: {str(e)}'}), 500
+
+
+@app.route("/download", methods=["GET"])
+def download_excel():
+    caminho_arquivo = os.path.join(
+        app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
+    
+    if os.path.exists(caminho_arquivo):
+        return send_file(
+            caminho_arquivo,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='Fechamento_preenchido.xlsx'
+        )
+    else:
+        return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
 
 
 if __name__ == "__main__":
