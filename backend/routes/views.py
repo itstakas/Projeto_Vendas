@@ -1,7 +1,8 @@
-from app import app
+from main import app
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
-from Classes import ProcessaDados
+from controladores.Classes import ProcessaDados
+from controladores.comparador import comparar_e_preencher
 import pandas as pd
 from flask import send_file
 import os
@@ -43,7 +44,7 @@ def upload_files():
         excel_file.save(excel_path)
 
         processador = ProcessaDados(csv_path, excel_path)
-        processador.comparar_e_preencher()
+        comparador = comparar_e_preencher(processador)
         caminho_saida = os.path.join(
             app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
 

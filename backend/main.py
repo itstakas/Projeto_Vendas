@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 CORS(app)  # habilita o cors e permite requisições no front
 
-from views import *
+from routes.views import *
 
 # config para upload de arquivos na pasta uploads
 UPLOAD_FOLDER = os.path.abspath(os.path.join(
