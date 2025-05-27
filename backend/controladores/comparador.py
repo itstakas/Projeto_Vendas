@@ -3,28 +3,30 @@ from rapidfuzz import fuzz
 from datetime import date
 import pandas as pd
 
-def comparar_e_preencher(self):
+
+def comparar_e_preencher(processador: ProcessaDados):
     nome_csv_usados = set()
     nome_excel_usados = set()
-    self.data_atual = date.today()
-    data_em_texto = self.data_atual.strftime('%d/%m/%Y')
+    processador.data_atual = date.today()
+    data_em_texto = processador.data_atual.strftime('%d/%m/%Y')
 
-    for idx_excel, row_excel in self.excel_df.iterrows():
+  
+    for idx_excel, row_excel in processador.excel_df.iterrows():
         nome_excel = str(row_excel['NOME']).strip().upper()
         encontrado = False
 
-        for idx_csv, row_csv in self.csv_df.iterrows():
+        for idx_csv, row_csv in processador.csv_df.iterrows():
             nome_csv = str(row_csv['Cliente']).strip().upper()
 
             similaridade = fuzz.WRatio(nome_csv, nome_excel)  
             print(f"Comparando: '{nome_excel}' <-> '{nome_csv}' => Similaridade: {similaridade}")
 
             if similaridade >= 90:
-                self.excel_df.at[idx_excel, 'CRM'] = nome_csv
-                self.excel_df.at[idx_excel, 'ESTADO'] = None
-                self.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Vendedor']
-                self.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Data de criação']
-                self.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Origem (categoria)']
+                processador.excel_df.at[idx_excel, 'CRM'] = nome_csv
+                processador.excel_df.at[idx_excel, 'ESTADO'] = None
+                processador.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Vendedor']
+                processador.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Origem (categoria)']
+                processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Origem (categoria)']
                 encontrado = True
                 if encontrado:
                     # adiciona os nomes conferidos em nome csv usados e esxel usados para comparativo mais tarde
@@ -35,13 +37,13 @@ def comparar_e_preencher(self):
             # if not encontrado:
             #     print(f"Cliente não encontrado: {nome_excel}")
         
-    for idx_csv, row_csv in self.csv_df.iterrows():
+    for idx_csv, row_csv in processador.csv_df.iterrows():
         nome_csv = str(row_csv['Cliente']).strip().upper()
 
         # ESSES DOIS IF PEGUEI DO CHAT, SE FUNCIONAR EU DOU UM MORTAL PRA TRAS
         if nome_csv not in nome_csv_usados:
 
-            nomes_existentes = self.excel_df['NOME'].astype(str).str.strip().str.upper()
+            nomes_existentes = processador.excel_df['NOME'].astype(str).str.strip().str.upper()
             if nome_csv in nomes_existentes.values: 
                 continue
 
@@ -59,6 +61,11 @@ def comparar_e_preencher(self):
             }])
 
             # PD CONCAT É PRA CONCATENAR O EXCEL COM O CODIGO DIGITADO ACIMA
-            self.excel_df = pd.concat([self.excel_df, nova_linha], ignore_index=True)
+            processador.excel_df = pd.concat([processador.excel_df, nova_linha], ignore_index=True)
             nome_csv_usados.add(nome_csv) #MARCA COMO USADO PARA NÃO REPETIR
             print(f"Adicionando novo cliente: {nome_csv}")
+
+    # Converter a coluna DATA_CONTRATO para datetime (formato reconhecível pelo Excel)    
+    processador.excel_df['DATA_CONTRATO'] = pd.to_datetime(processador.excel_df['DATA_CONTRATO'], errors='coerce', dayfirst=True)
+
+    return processador
