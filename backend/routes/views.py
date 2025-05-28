@@ -6,13 +6,12 @@ from controladores.comparador import comparar_e_preencher
 import pandas as pd
 from flask import send_file
 import os
-from utils.limpeza import remover_colunas_denecessarias
+from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril
 
 
 @app.route("/")
 def hello_world():
     return 'Olá, backend do Flask'
-
 
 
 @app.route('/upload', methods=["POST"])
@@ -54,20 +53,21 @@ def upload_files():
         # Remove as colunas indesejadas do DataFrame antes de salvar
         processador.excel_df = remover_colunas_denecessarias(processador.excel_df)
 
-        #=============================CHAT GPT FULL, se der ruim, não me responsabilizo emm====================
-         
-        caminho_saida =  
+        # Remove os clientes que ja foram pagos em abril    
+        processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
 
+        # processador.excel_df = processador.excel_df[~processador.excel_df['NOME']. isin(apagar_nome)]
+    
         # # Define o caminho onde o arquivo final (com os dados preenchidos) será salvo
-        # caminho_saida = os.path.join(app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
+        caminho_saida = os.path.join(app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
 
         # # Salva o DataFrame Excel processado no caminho especificado
-        # processador.salvar_excel_preenchido(caminho_saida)
+        processador.salvar_excel_preenchido(caminho_saida)
 
-        # return jsonify({
-        #     'message': 'Processamento concluido com sucesso',
-        #     'arquivo_gerado': True
-        # })
+        return jsonify({
+            'message': 'Processamento concluido com sucesso',
+            'arquivo_gerado': True
+        })
 
     except Exception as e:
 

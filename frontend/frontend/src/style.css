@@ -45,35 +45,21 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
+  margin-top: 50px
 }
 
 #app {
-  max-width: 1280px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.loading {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  margin-top: 10px;
+  color: rgb(223, 223, 231);
+  font-weight: bold;
+  margin-bottom: 10px;
 }
