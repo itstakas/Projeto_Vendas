@@ -14,7 +14,7 @@ def comparar_e_preencher(processador: ProcessaDados):
         encontrado = False
 
         for idx_csv, row_csv in processador.csv_df.iterrows():
-            nome_csv = str(row_csv['Cliente']).strip().upper()
+            nome_csv = str(row_csv['Id Cliente']).strip().upper()
 
             similaridade = fuzz.WRatio(nome_csv, nome_excel)  
             print(f"Comparando: '{nome_excel}' <-> '{nome_csv}' => Similaridade: {similaridade}")
@@ -33,7 +33,7 @@ def comparar_e_preencher(processador: ProcessaDados):
                 break
         
     for idx_csv, row_csv in processador.csv_df.iterrows():
-        nome_csv = str(row_csv['Cliente']).strip().upper()
+        nome_csv = str(row_csv['Id Cliente']).strip().upper()
 
         # ESSES DOIS IF PEGUEI DO CHAT, SE FUNCIONAR EU DOU UM MORTAL PRA TRAS
         if nome_csv not in nome_csv_usados:

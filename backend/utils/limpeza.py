@@ -1,5 +1,6 @@
 import pandas as pd
 from routes.views import *
+from datetime import datetime
 
 def remover_colunas_denecessarias(df: pd.DataFrame) -> pd.DataFrame:
 
@@ -40,4 +41,15 @@ def contratos_pagos_em_abril(df: pd.DataFrame) -> pd.DataFrame:
     if 'NOME' in df.columns:
         df = df[~df['NOME'].isin(apagar_nome)]
 
+    return df
+
+
+
+def filtrar_mes_atual(df):
+    hoje = datetime.today()
+    df['Responsável por indicar'] = pd.to_datetime(df['Responsável por indicar'], format='%d/%m/%Y', errors='coerce')
+    df = df[
+        (df['Responsável por indicar'].dt.month == hoje.month) &
+        (df['Responsável por indicar'].dt.year == hoje.year)
+    ]
     return df

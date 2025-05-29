@@ -6,7 +6,7 @@ from controladores.comparador import comparar_e_preencher
 import pandas as pd
 from flask import send_file
 import os
-from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril
+from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual
 
 
 @app.route("/")
@@ -46,6 +46,9 @@ def upload_files():
 
         # Cria uma instância da classe ProcessaDados, passando os caminhos dos arquivos CSV e Excel
         processador = ProcessaDados(csv_path, excel_path)
+
+        # Filtra apenas os dados criados no mês atual
+        processador.csv_df = filtrar_mes_atual(processador.csv_df)    
 
         # Chama a função que realiza a comparação e preenchimento entre os dados dos arquivos
         processador = comparar_e_preencher(processador)
