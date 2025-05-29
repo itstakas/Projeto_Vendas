@@ -2,7 +2,6 @@ from controladores.Classes import ProcessaDados
 from rapidfuzz import fuzz
 from datetime import date
 import pandas as pd
-from datetime import datetime
 
 
 def comparar_e_preencher(processador: ProcessaDados):
@@ -25,7 +24,7 @@ def comparar_e_preencher(processador: ProcessaDados):
                 processador.excel_df.at[idx_excel, 'ESTADO'] = None
                 processador.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Vendedor']
                 processador.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Origem (categoria)']
-                processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Origem (categoria)']
+                processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Suborigem (subcategoria)']
                 encontrado = True
                 if encontrado:
                     # adiciona os nomes conferidos em nome csv usados e esxel usados para comparativo mais tarde
