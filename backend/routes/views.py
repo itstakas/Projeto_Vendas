@@ -70,7 +70,7 @@ def upload_files():
         })
 
     except Exception as e:
-
+#teste
         print(f"Erro ao processar arquivos: {str(e)}")
         # Se algo falhou que não foi pego pelas verificações anteriores
         return jsonify({'error': f'Erro desconhecido ao processar o upload dos arquivos: {str(e)}'}), 500

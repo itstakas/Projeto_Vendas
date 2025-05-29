@@ -23,6 +23,7 @@ class ProcessaDados:
     #         (self.csv_df['Data de criação'].dt.month == hoje.month) &
     #         (self.csv_df['Data de criação'].dt.year == hoje.year)
     #     ]
+    #
         
     def preencher_novas_colunas(self):
         self.excel_df['CRM'] = None
