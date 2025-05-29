@@ -11,12 +11,19 @@ class ProcessaDados:
         self.csv_df = pd.read_csv(csv_path, sep=";")
         self.excel_df = pd.read_excel(excel_path)
 
-        # self.excel_df['DATA_CONTRATO'] = pd.to_datetime(
-        #     self.excel_df['DATA_CONTRATO'],
-        #     dayfirst=True,
-        #     errors='coerce'  # transforma inválidos em NaT
-        # )
+        # Transforma os valores da coluna DATA_CONTRATO em String
+        # self.excel_df['DATA_CONTRATO'] = self.excel_df['DATA_CONTRATO'].astype(str)
 
+        # Transforma os valores da coluna DATA_CONTRATO e da DATA_ADESAO no formato data
+        self.excel_df['DATA_CONTRATO'] = pd.to_datetime(self.excel_df['DATA_CONTRATO'], format='%d/%m/%Y', errors='coerce')
+        self.excel_df['DATA_ADESAO'] = pd.to_datetime(self.excel_df['DATA_ADESAO'], format='%d/%m/%Y', errors='coerce')
+
+        # --------------------------------------------------------------------------------------------------
+
+        # Mantem as datas como DD/MM/AAAA
+        # self.excel_df['DATA_CONTRATO'] = self.excel_df['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+
+        # Percorre a coluna DATA_CONTRATO e printa o formato dela, se é string, object ou data e printa na tela o formato e o valor
         for data in self.excel_df['DATA_CONTRATO']:
             print(f"Formato da data: {type(data)} | Valor: {data}")
 

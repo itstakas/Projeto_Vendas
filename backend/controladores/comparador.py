@@ -22,9 +22,9 @@ def comparar_e_preencher(processador: ProcessaDados):
             if similaridade >= 90:
                 processador.excel_df.at[idx_excel, 'CRM'] = nome_csv
                 processador.excel_df.at[idx_excel, 'ESTADO'] = None
-                processador.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Vendedor']
-                processador.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Origem (categoria)']
-                processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Suborigem (subcategoria)']
+                processador.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Unidade']
+                processador.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Data de criação']
+                processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Origem (categoria)']
                 encontrado = True
                 if encontrado:
                     # adiciona os nomes conferidos em nome csv usados e esxel usados para comparativo mais tarde

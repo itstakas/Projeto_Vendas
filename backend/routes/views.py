@@ -60,7 +60,7 @@ def upload_files():
         processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
 
         # Troca as datas de mm/dd/aaaa -> dd/mm/aaaa
-        processador.excel_df = formatar_mes_atual(processador.excel_df)
+        # processador.excel_df = formatar_mes_atual(processador.excel_df)
          
         # Define o caminho onde o arquivo final (com os dados preenchidos) será salvo
         caminho_saida = os.path.join(app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
