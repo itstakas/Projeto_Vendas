@@ -6,7 +6,7 @@ from controladores.comparador import comparar_e_preencher
 import pandas as pd
 from flask import send_file
 import os
-from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual
+from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual, formatar_mes_atual
 
 
 @app.route("/")
@@ -59,9 +59,10 @@ def upload_files():
         # Remove os clientes que ja foram pagos em abril    
         processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
 
-        # processador.excel_df = processador.excel_df[~processador.excel_df['NOME']. isin(apagar_nome)]
-    
-        # # Define o caminho onde o arquivo final (com os dados preenchidos) será salvo
+        # Troca as datas de mm/dd/aaaa -> dd/mm/aaaa
+        processador.excel_df = formatar_mes_atual(processador.excel_df)
+         
+        # Define o caminho onde o arquivo final (com os dados preenchidos) será salvo
         caminho_saida = os.path.join(app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
 
         # # Salva o DataFrame Excel processado no caminho especificado

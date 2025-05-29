@@ -53,3 +53,8 @@ def filtrar_mes_atual(df):
         (df['Responsável por indicar'].dt.year == hoje.year)
     ]
     return df
+
+def formatar_mes_atual(df):
+        
+    return df
+   

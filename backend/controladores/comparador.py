@@ -17,7 +17,7 @@ def comparar_e_preencher(processador: ProcessaDados):
             nome_csv = str(row_csv['Id Cliente']).strip().upper()
 
             similaridade = fuzz.WRatio(nome_csv, nome_excel)  
-            print(f"Comparando: '{nome_excel}' <-> '{nome_csv}' => Similaridade: {similaridade}")
+            #print(f"Comparando: '{nome_excel}' <-> '{nome_csv}' => Similaridade: {similaridade}")
 
             if similaridade >= 90:
                 processador.excel_df.at[idx_excel, 'CRM'] = nome_csv

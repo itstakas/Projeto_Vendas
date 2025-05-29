@@ -11,6 +11,15 @@ class ProcessaDados:
         self.csv_df = pd.read_csv(csv_path, sep=";")
         self.excel_df = pd.read_excel(excel_path)
 
+        # self.excel_df['DATA_CONTRATO'] = pd.to_datetime(
+        #     self.excel_df['DATA_CONTRATO'],
+        #     dayfirst=True,
+        #     errors='coerce'  # transforma inválidos em NaT
+        # )
+
+        for data in self.excel_df['DATA_CONTRATO']:
+            print(f"Formato da data: {type(data)} | Valor: {data}")
+
         self.preencher_novas_colunas()
         
     def preencher_novas_colunas(self):
