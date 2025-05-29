@@ -4,7 +4,8 @@ from werkzeug.utils import secure_filename
 from controladores.Classes import ProcessaDados
 from controladores.comparador import comparar_e_preencher
 import pandas as pd
-from flask import send_file
+from flask import send_file, abort
+import uuid
 import os
 from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril
 
@@ -16,77 +17,97 @@ def hello_world():
 
 @app.route('/upload', methods=["POST"])
 def upload_files():
-
-    # pega os objetos de requisição
-    csv_file = request.files.get('csv')
-    excel_file = request.files.get('excel')
-
-    # Verifica se 'csv_file' e 'excel_file' estão sendo requisitados
+    # Verificação inicial dos arquivos
     if 'csv' not in request.files or 'excel' not in request.files:
-        # Retorna uma mensagem de erro
         return jsonify({'error': 'Nenhum arquivo CSV ou Excel foi enviado'}), 400
-
-    # Verifica se os nomes dos arquivos não estão vazios (o que significa que um arquivo foi realmente selecionado)
+    
+    csv_file = request.files['csv']
+    excel_file = request.files['excel']
+    
     if csv_file.filename == '' or excel_file.filename == '':
-        # Retorna uma mensagem de erro
-        return jsonify({'error': 'Nome de arquivo vazio'}), 400
+        return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
+
+    # Verificação de extensões
+    if not (csv_file.filename.lower().endswith('.csv') and 
+            excel_file.filename.lower().endswith(('.xls', '.xlsx'))):
+        return jsonify({'error': 'Formatos de arquivo inválidos. Esperado: CSV e Excel'}), 400
 
     try:
-        # Confere os nomes dos arquivos para segurança
-        csv_filename = secure_filename(csv_file.filename)
-        excel_filename = secure_filename(excel_file.filename)
+        # Criar diretório seguro para processamento
+        process_id = str(uuid.uuid4())
+        temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], process_id)
+        os.makedirs(temp_dir, exist_ok=True)
 
-        # Cria os caminhos completos para salvar os arquivos na pasta UPLOAD_FOLDER
-        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], csv_filename)
-        excel_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_filename)
-
-        # Salva os arquivos no disco
+        # Salvar arquivos com nomes seguros
+        csv_path = os.path.join(temp_dir, secure_filename(csv_file.filename))
+        excel_path = os.path.join(temp_dir, secure_filename(excel_file.filename))
         csv_file.save(csv_path)
         excel_file.save(excel_path)
 
-        # Cria uma instância da classe ProcessaDados, passando os caminhos dos arquivos CSV e Excel
-        processador = ProcessaDados(csv_path, excel_path)
-
-        # Chama a função que realiza a comparação e preenchimento entre os dados dos arquivos
-        processador = comparar_e_preencher(processador)
-        
-        # Remove as colunas indesejadas do DataFrame antes de salvar
-        processador.excel_df = remover_colunas_denecessarias(processador.excel_df)
-
-        # Remove os clientes que ja foram pagos em abril    
-        processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
-
-        # processador.excel_df = processador.excel_df[~processador.excel_df['NOME']. isin(apagar_nome)]
-    
-        # # Define o caminho onde o arquivo final (com os dados preenchidos) será salvo
-        caminho_saida = os.path.join(app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
-
-        # # Salva o DataFrame Excel processado no caminho especificado
-        processador.salvar_excel_preenchido(caminho_saida)
-
-        return jsonify({
-            'message': 'Processamento concluido com sucesso',
-            'arquivo_gerado': True
-        })
-
+        # Processamento principal
+        try:
+            processador = ProcessaDados(csv_path, excel_path)
+            processador = comparar_e_preencher(processador)
+            
+            # Aplicar transformações
+            processador.excel_df = remover_colunas_denecessarias(processador.excel_df)
+            processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
+            
+            # Gerar arquivo de saída
+            output_filename = f'Fechamento_preenchido_{process_id}.xlsx'
+            caminho_saida = os.path.join(temp_dir, output_filename)
+            processador.salvar_excel_preenchido(caminho_saida)
+            
+            # Mover arquivo final para área pública de download
+            final_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+            os.rename(caminho_saida, final_path)
+            
+            return jsonify({
+                'message': 'Processamento concluído com sucesso',
+                'arquivo_gerado': True,
+                'download_id': process_id
+            })
+            
+        except pd.errors.EmptyDataError:
+            abort(400, description="Arquivo CSV ou Excel está vazio")
+        except KeyError as e:
+            abort(400, description=f"Coluna obrigatória não encontrada: {str(e)}")
+        except Exception as e:
+            app.logger.error(f"Erro no processamento: {str(e)}", exc_info=True)
+            abort(500, description="Erro durante o processamento dos dados")
+            
     except Exception as e:
-#teste
-        print(f"Erro ao processar arquivos: {str(e)}")
-        # Se algo falhou que não foi pego pelas verificações anteriores
-        return jsonify({'error': f'Erro desconhecido ao processar o upload dos arquivos: {str(e)}'}), 500
+        app.logger.error(f"Erro no upload: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Erro interno no servidor'}), 500
+        
+    finally:
+        # Limpeza dos arquivos temporários
+        try:
+            if 'temp_dir' in locals():
+                for filename in os.listdir(temp_dir):
+                    file_path = os.path.join(temp_dir, filename)
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                os.rmdir(temp_dir)
+        except Exception as e:
+            app.logger.error(f"Erro na limpeza: {str(e)}")
 
 
-@app.route("/download", methods=["GET"])
-def download_excel():
-    caminho_arquivo = os.path.join(
-        app.config['UPLOAD_FOLDER'], 'Fechamento_preenchido.xlsx')
-
-    if os.path.exists(caminho_arquivo):
+@app.route("/download/<string:file_id>", methods=["GET"])
+def download_excel(file_id):
+    filename = f'Fechamento_preenchido_{file_id}.xlsx'
+    caminho_arquivo = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
+    if not os.path.exists(caminho_arquivo):
+        return jsonify({'error': 'Arquivo não encontrado ou expirado'}), 404
+        
+    try:
         return send_file(
             caminho_arquivo,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
             download_name='Fechamento_preenchido.xlsx'
         )
-    else:
-        return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
+    except Exception as e:
+        app.logger.error(f"Erro no download: {str(e)}")
+        return jsonify({'error': 'Erro ao enviar arquivo'}), 500

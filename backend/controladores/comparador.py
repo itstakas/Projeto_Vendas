@@ -1,51 +1,52 @@
 from controladores.Classes import ProcessaDados
-from rapidfuzz import fuzz
+from rapidfuzz import fuzz, process
 from datetime import date
 import pandas as pd
 
-
 def comparar_e_preencher(processador: ProcessaDados):
-    nome_csv_usados = set()
-    nome_excel_usados = set()
     processador.data_atual = date.today()
+    
+    # Pré-processamento: criar dicionários e conjuntos para acesso rápido
+    csv_nomes = {str(nome).strip().upper(): idx 
+                for idx, nome in enumerate(processador.csv_df['Cliente'])}
+    excel_nomes = {str(nome).strip().upper(): idx 
+                  for idx, nome in enumerate(processador.excel_df['NOME'])}
+    
+    # Conjuntos para controle
+    nomes_csv_usados = set()
+    nomes_excel_usados = set()
 
-    for idx_excel, row_excel in processador.excel_df.iterrows():
-        nome_excel = str(row_excel['NOME']).strip().upper()
-        encontrado = False
-
-        for idx_csv, row_csv in processador.csv_df.iterrows():
-            nome_csv = str(row_csv['Cliente']).strip().upper()
-
-            similaridade = fuzz.WRatio(nome_csv, nome_excel)  
-            print(f"Comparando: '{nome_excel}' <-> '{nome_csv}' => Similaridade: {similaridade}")
-
-            if similaridade >= 90:
-                processador.excel_df.at[idx_excel, 'CRM'] = nome_csv
-                processador.excel_df.at[idx_excel, 'ESTADO'] = None
-                processador.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Vendedor']
-                processador.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Origem (categoria)']
-                processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Suborigem (subcategoria)']
-                encontrado = True
-                if encontrado:
-                    # adiciona os nomes conferidos em nome csv usados e esxel usados para comparativo mais tarde
-                    nome_csv_usados.add(nome_csv)
-                    nome_excel_usados.add(nome_excel)
-                break
+    # Primeira passada: encontrar correspondências com alta similaridade
+    for nome_excel, idx_excel in excel_nomes.items():
+        # Usa rapidfuzz.process para encontrar a melhor correspondência
+        melhor_match = process.extractOne(
+            nome_excel, 
+            csv_nomes.keys(),
+            scorer=fuzz.WRatio,
+            score_cutoff=90  # Só considera matches com similaridade >= 90
+        )
         
-    for idx_csv, row_csv in processador.csv_df.iterrows():
-        nome_csv = str(row_csv['Cliente']).strip().upper()
-
-        # ESSES DOIS IF PEGUEI DO CHAT, SE FUNCIONAR EU DOU UM MORTAL PRA TRAS
-        if nome_csv not in nome_csv_usados:
-
-            nomes_existentes = processador.excel_df['NOME'].astype(str).str.strip().str.upper()
-            if nome_csv in nomes_existentes.values: 
-                continue
-
-            # ADICIONAR OS NOMES DE CSV QUE Ñ ESTÃO NO EXCEL, NO FINAL DO EXCEL, PQ Ñ DEU TEMPO DO CADASTRO
-            # FINALIZAR
+        if melhor_match:
+            nome_csv, score, _ = melhor_match
+            idx_csv = csv_nomes[nome_csv]
+            
+            # Atualiza o DataFrame do Excel
+            row_csv = processador.csv_df.iloc[idx_csv]
+            processador.excel_df.at[idx_excel, 'CRM'] = nome_csv
+            processador.excel_df.at[idx_excel, 'ESTADO'] = None
+            processador.excel_df.at[idx_excel, 'VENDEDOR_TELE'] = row_csv['Vendedor']
+            processador.excel_df.at[idx_excel, 'CATEGORIA'] = row_csv['Origem (categoria)']
+            processador.excel_df.at[idx_excel, 'SUBCATEGORIA'] = row_csv['Suborigem (subcategoria)']
+            
+            nomes_csv_usados.add(nome_csv)
+            nomes_excel_usados.add(nome_excel)
+    
+    # Segunda passada: adicionar clientes não encontrados
+    for nome_csv, idx_csv in csv_nomes.items():
+        if nome_csv not in nomes_csv_usados and nome_csv not in excel_nomes:
+            row_csv = processador.csv_df.iloc[idx_csv]
+            
             nova_linha = pd.DataFrame([{
-
                 'NOME': nome_csv,
                 'VENDEDOR': None,
                 'DATA_CONTRATO': processador.data_atual,
@@ -55,10 +56,11 @@ def comparar_e_preencher(processador: ProcessaDados):
                 'CRM': None,
                 'ESTADO': None
             }])
-
-            # PD CONCAT É PRA CONCATENAR O EXCEL COM O CODIGO DIGITADO ACIMA
-            processador.excel_df = pd.concat([processador.excel_df, nova_linha], ignore_index=True)
-            nome_csv_usados.add(nome_csv) #MARCA COMO USADO PARA NÃO REPETIR
+            
+            processador.excel_df = pd.concat(
+                [processador.excel_df, nova_linha], 
+                ignore_index=True
+            )
             print(f"Adicionando novo cliente: {nome_csv}")
-
+    
     return processador
