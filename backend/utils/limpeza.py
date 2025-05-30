@@ -3,7 +3,7 @@ from routes.views import *
 from datetime import datetime
 
 def remover_colunas_denecessarias(df: pd.DataFrame) -> pd.DataFrame:
-
+    #Lista de colunas que devem ser removidas, se existirem no DataFrame
     colunas_para_remover = [
         'DATA_CADASTRO',
         'ULTIMO_PAGAMENTO',
@@ -15,10 +15,11 @@ def remover_colunas_denecessarias(df: pd.DataFrame) -> pd.DataFrame:
         'ENDERECO_COB'
     ]
 
+    # Remove as colunas que estiverem no DataFrame, ignorando erros caso alguma não exista
     return df.drop(columns=[col for col in colunas_para_remover if col in df.columns], errors='ignore')
 
 def contratos_pagos_em_abril(df: pd.DataFrame) -> pd.DataFrame:
-
+    # Conjunto de nomes a serem excluídos do DataFrame
     apagar_nome = {
             'DORALINA',
             'MARINALVA DE OLIVEIRA SOBRINHO',
@@ -38,16 +39,21 @@ def contratos_pagos_em_abril(df: pd.DataFrame) -> pd.DataFrame:
             'MILCE FERREIRA DA COSTA',
             'THAÍS FONTANA DA CUNHA'
         }
+    
+    # Se a coluna 'NOME' existir, remove as linhas cujo nome esteja na lista de exclusão
     if 'NOME' in df.columns:
         df = df[~df['NOME'].isin(apagar_nome)]
 
     return df
 
-
-
+# Função que filtra os dados do DataFrame apenas para o mês atual
 def filtrar_mes_atual(df):
+    # Obtém a data atual
     hoje = datetime.today()
+    # Converte a coluna 'Responsável por indicar' para datetime
     df['Responsável por indicar'] = pd.to_datetime(df['Responsável por indicar'], format='%d/%m/%Y', errors='coerce')
+    
+    # Filtra os registros que pertencem ao mês e ano atuais
     df = df[
         (df['Responsável por indicar'].dt.month == hoje.month) &
         (df['Responsável por indicar'].dt.year == hoje.year)
