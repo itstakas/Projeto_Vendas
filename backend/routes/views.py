@@ -6,7 +6,8 @@ from controladores.comparador import comparar_e_preencher
 import pandas as pd
 from flask import send_file
 import os
-from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual, formatar_mes_atual
+from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual
+from utils.macro import colar_e_executar_macro
 
 
 # Rota raiz, apenas para teste de funcionamento do backend Flask
@@ -60,6 +61,12 @@ def upload_files():
 
         # Remove os clientes que já foram pagos no mês de abril (filtro específico)
         processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
+
+        #caminho da macro
+        caminho_macro = r'C:\Users\Pax Primavera\Documents\MeusProjetos\Projeto_Vendas\Macro\Macro - Troca de Data.xlsm'
+
+        #pega o arquivo excel ja tratado e aplica a macro
+        processador.excel_df = colar_e_executar_macro(processador.excel_df, caminho_macro)
 
         # Caso queira formatar datas do formato mm/dd/aaaa para dd/mm/aaaa (comentado aqui)
         # processador.excel_df = formatar_mes_atual(processador.excel_df)

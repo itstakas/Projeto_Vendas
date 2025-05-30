@@ -58,9 +58,9 @@ def comparar_e_preencher(processador: ProcessaDados):
                 'NOME': nome_csv,
                 'VENDEDOR': None,
                 'DATA_CONTRATO': processador.data_atual,
-                'CATEGORIA': row_csv['Origem (categoria)'],
-                'SUBCATEGORIA': row_csv['Suborigem (subcategoria)'],
-                'VENDEDOR_TELE': row_csv['Vendedor'],
+                'CATEGORIA': row_csv['Data de criação'],
+                'SUBCATEGORIA': row_csv['Origem (categoria)'],
+                'VENDEDOR_TELE': row_csv['Unidade'],
                 'CRM': None,
                 'ESTADO': None
             }])
