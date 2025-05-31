@@ -17,7 +17,7 @@ def colar_e_executar_macro(df, caminho_macro):
 
     try:
         excel = win32.gencache.EnsureDispatch('Excel.Application')
-        excel.Visible = False
+        excel.Visible = True
         excel.DisplayAlerts = False  # evita janelas de confirmação
 
         # Abre o arquivo com macro
@@ -69,3 +69,29 @@ def colar_e_executar_macro(df, caminho_macro):
         pythoncom.CoUninitialize()
 
     return df_resultante
+
+def colar_macro(caminho_entrada, caminho_saida):
+
+    pythoncom.CoInitialize()
+
+    try:
+        excel = win32.gencache.EnsureDispatch("Excel.Apllication")
+        excel.Visible = False
+        excel.DisplayAlerts = False
+
+        #Abre o arquivo original com macro aplicada
+        wb_origem = excel.Workbooks.Open(caminho_entrada)
+        ws_origem = wb_origem.Worksheets(1)
+
+        ultima_linha = ws_origem.UsedRange.Rows.Count
+        ultima_coluna = ws_origem.UsedRange.Columns.Count
+        intervalo = ws_origem.Range(ws_origem.Cells(1, 1), ws_origem(ultima_linha, ultima_coluna))
+
+        intervalo.Copy()
+
+        # Cria planilha onde os dados formatados serão colados
+        wb_destino
+
+    finally:
+
+        pythoncom.CoInitialize()

@@ -89,6 +89,12 @@ export default {
 
         this.resposta = response.data  // Armazena a resposta JSON do backend
 
+        // Chama o download automaticamente apos o processamento
+        if (this.resposta.arquivo_gerado){
+          this.$toast.success("Arquivos processados com sucesso! Baixando...");
+          await this.baixarExcel();
+        }
+
       } catch (error) {
         console.error(error)
         this.resposta = 'Erro ao enviar arquivos'  // Mensagem em caso de erro
