@@ -5,6 +5,7 @@ import pandas as pd
 import tempfile
 import os
 import gc
+import time
 
 def colar_e_executar_macro(df, caminho_macro):
     # Inicializa COM manualmente
@@ -50,15 +51,21 @@ def colar_e_executar_macro(df, caminho_macro):
             print(f"Erro ao executar a macro: {e}")
 
         # Salva e fecha
-        wb.SaveAs(caminho_saida)
+        wb.SaveAs(caminho_saida, FileFormat=51)
 
-        df_resultante = pd.read_excel(caminho_saida, FileFormatt=52)
-        return df_resultante
+        wb.Close(SaveChanges=True)
+        excel.Quit()
+
+        time.sleep(1)
+
+        df_resultante = pd.read_excel(caminho_saida)
 
     finally:
         # Libera a COM
         ws = None
         wb = None
-        excel.Quit()
+        excel = None
         gc.collect()
         pythoncom.CoUninitialize()
+
+    return df_resultante
