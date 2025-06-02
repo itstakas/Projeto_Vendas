@@ -46,16 +46,27 @@ def contratos_pagos_em_abril(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-# Função que filtra os dados do DataFrame apenas para o mês atual
-def filtrar_mes_atual(df):
-    # Obtém a data atual
-    hoje = datetime.today()
+def filtrar_maio_2025(df):
     # Converte a coluna 'Responsável por indicar' para datetime
     df['Responsável por indicar'] = pd.to_datetime(df['Responsável por indicar'], format='%d/%m/%Y', errors='coerce')
     
-    # Filtra os registros que pertencem ao mês e ano atuais
+    # Filtra os registros que pertencem ao mês 05 (maio) e ano 2024
     df = df[
-        (df['Responsável por indicar'].dt.month == hoje.month) &
-        (df['Responsável por indicar'].dt.year == hoje.year)
+        (df['Responsável por indicar'].dt.month == 5) &
+        (df['Responsável por indicar'].dt.year == 2025)
     ]
     return df
+
+# # Função que filtra os dados do DataFrame apenas para o mês atual
+# def filtrar_mes_atual(df):
+#     # Obtém a data atual
+#     hoje = datetime.today()
+#     # Converte a coluna 'Responsável por indicar' para datetime
+#     df['Responsável por indicar'] = pd.to_datetime(df['Responsável por indicar'], format='%d/%m/%Y', errors='coerce')
+    
+#     # Filtra os registros que pertencem ao mês e ano atuais
+#     df = df[
+#         (df['Responsável por indicar'].dt.month == hoje.month) &
+#         (df['Responsável por indicar'].dt.year == hoje.year)
+#     ]
+#     return df

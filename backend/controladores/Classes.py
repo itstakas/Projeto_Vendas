@@ -17,8 +17,8 @@ class ProcessaDados:
         self.excel_df['DATA_ADESAO'] = self.excel_df['DATA_ADESAO'].apply(lambda x: x.strftime('%d/%m/%Y') if pd.notnull(x) else '')
 
         # Loop para verificar o tipo e o valor de cada data na coluna 'DATA_CONTRATO'
-        for data in self.excel_df['DATA_CONTRATO']:
-            print(f"Formato da data: {type(data)} | Valor: {data}")
+        # for data in self.excel_df['DATA_CONTRATO']:
+        #     print(f"Formato da data: {type(data)} | Valor: {data}")
 
         self.preencher_novas_colunas()
         
@@ -30,5 +30,5 @@ class ProcessaDados:
 
     # Método para salvar o DataFrame modificado em um novo arquivo Excel
     def salvar_excel_preenchido(self, caminho_saida):
-        # Salva o DataFrame no caminho especificado, sem incluir o índice das linhas
         self.excel_df.to_excel(caminho_saida, index=False)
+        print(f"Arquivo salvo em: {caminho_saida}")

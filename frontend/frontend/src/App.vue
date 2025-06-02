@@ -23,8 +23,8 @@
       <!-- Botão para enviar arquivos -->
       <button type="submit">Enviar</button>
 
-      <!-- Botão para baixar o Excel gerado, só aparece se backend respondeu com chave 'message' -->
-      <button type="button" @click="baixarExcel" v-if="resposta && resposta.message">
+      <!-- MOSTRA O BOTÃO SE TIVER RESPOSTA -->
+      <button type="button" @click="baixarExcel" v-if="resposta">
         📥 Baixar Excel
       </button>
     </form>
@@ -35,9 +35,10 @@
       <pre>{{ resposta }}</pre>
     </div>
 
-    <!-- Link alternativo para baixar o arquivo Excel gerado, se existir -->
-    <div v-if="linkExcel">
-      <a :href="linkExcel" target="_blank" download>📥 Baixar planilha preenchida</a>
+    <!-- DEBUG DA RESPOSTA -->
+    <div v-if="resposta">
+      <h2>Resposta do backend (debug):</h2>
+      <pre>{{ JSON.stringify(resposta, null, 2) }}</pre>
     </div>
   </div>
 </template>
@@ -51,7 +52,6 @@ export default {
       arquivoCsv: null,      // Guarda o arquivo CSV selecionado pelo usuário
       arquivoExcel: null,    // Guarda o arquivo Excel selecionado pelo usuário
       resposta: null,        // Guarda a resposta JSON do backend após upload
-      linkExcel: null,       // Link direto para download do Excel (opcional)
       loading: false         // Variável para indicar se está carregando/processando
     }
   },
@@ -70,6 +70,7 @@ export default {
     // Método para enviar os arquivos ao backend via POST usando axios
     async enviarArquivos() {
       this.loading = true;  // Ativa o indicador de carregamento
+      this.resposta = null;
       try {
         // Cria um FormData para enviar arquivos via multipart/form-data
         const formData = new FormData()
@@ -87,6 +88,7 @@ export default {
           }
         )
 
+        console.log('Resposta do backend: ', response.data)
         this.resposta = response.data  // Armazena a resposta JSON do backend
 
         // Chama o download automaticamente apos o processamento
@@ -119,14 +121,12 @@ export default {
 
         // Cria uma URL temporária para o blob (arquivo em memória)
         const url = window.URL.createObjectURL(blob)
-
         // Cria um elemento <a> invisível para simular o clique de download
         const link = document.createElement('a')
         link.href = url
         link.setAttribute('download', 'resultado.xlsx')  // Nome do arquivo para download
         document.body.appendChild(link)
         link.click()  // Executa o clique para disparar o download
-
         // Remove a URL temporária da memória para liberar recursos
         window.URL.revokeObjectURL(url)
 
