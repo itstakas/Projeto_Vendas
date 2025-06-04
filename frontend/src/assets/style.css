@@ -45,7 +45,8 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-  margin-top: 50px
+  margin-top: 50px;
+  margin-bottom: 32px;
 }
 
 #app {
@@ -62,4 +63,8 @@ button {
   color: rgb(223, 223, 231);
   font-weight: bold;
   margin-bottom: 10px;
+}
+
+button:hover{
+  background-color: rgb(48, 48, 48);
 }
