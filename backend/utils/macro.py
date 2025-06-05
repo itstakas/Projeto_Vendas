@@ -20,7 +20,7 @@ def colar_e_executar_macro(df, caminho_macro):
         shutil.copy(caminho_macro, temp_macro_path)
 
         excel = win32.gencache.EnsureDispatch('Excel.Application')
-        excel.Visible = True
+        excel.Visible = False
         excel.DisplayAlerts = False
 
         wb = excel.Workbooks.Open(temp_macro_path)
