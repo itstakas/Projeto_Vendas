@@ -26,7 +26,7 @@ def comparar_e_preencher(processador: ProcessaDados):
             #print(f"Comparando: '{nome_excel}' <-> '{nome_csv}' => Similaridade: {similaridade}")
 
             # Se a similaridade for maior ou igual a 90, considera que os nomes correspondem
-            if similaridade >= 93:
+            if similaridade >= 90:
                 # Preenche os campos do Excel com dados correspondentes do CSV
                 processador.excel_df.at[idx_excel, 'CRM'] = nome_csv
                 processador.excel_df.at[idx_excel, 'ESTADO'] = None

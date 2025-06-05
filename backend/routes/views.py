@@ -5,7 +5,7 @@ from controladores.Classes import ProcessaDados
 from controladores.comparador import comparar_e_preencher
 import pandas as pd
 import os
-from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_maio_2025
+from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual
 from utils.macro import colar_e_executar_macro
 
 # Rota que processa os dados no back end, recebe csv, recebe excel e executa macro, gerando resultado.xlsx
@@ -41,7 +41,7 @@ def upload_files():
         processador = ProcessaDados(csv_path, excel_path)
 
         print("Filtrando dados do CSV pelo mês atual...")
-        processador.csv_df = filtrar_maio_2025(processador.csv_df)
+        processador.csv_df = filtrar_mes_atual(processador.csv_df)
         print(f"CSV filtrado shape: {processador.csv_df.shape}")
 
         print("Comparando e preenchendo dados...")
