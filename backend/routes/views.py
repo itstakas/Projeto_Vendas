@@ -9,6 +9,8 @@ from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abri
 from utils.macro import colar_e_executar_macro
 
 # Rota que processa os dados no back end, recebe csv, recebe excel e executa macro, gerando resultado.xlsx
+
+
 @app.route('/upload', methods=['POST'])
 def upload_files():
     print("Recebendo arquivos...")
@@ -46,7 +48,8 @@ def upload_files():
         processador = comparar_e_preencher(processador)
 
         print("Removendo colunas desnecessárias...")
-        processador.excel_df = remover_colunas_denecessarias(processador.excel_df)
+        processador.excel_df = remover_colunas_denecessarias(
+            processador.excel_df)
 
         print("Removendo contratos pagos em abril...")
         processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
@@ -54,7 +57,8 @@ def upload_files():
         caminho_macro = r'C:\Users\Pax Primavera\Documents\MeusProjetos\Projeto_Vendas\Macro\Macro - Troca de Data.xlsm'
 
         print("Executando macro...")
-        df_macro, caminho_arquivo_macro_gerado = colar_e_executar_macro(processador.excel_df, caminho_macro)
+        df_macro, caminho_arquivo_macro_gerado = colar_e_executar_macro(
+            processador.excel_df, caminho_macro)
 
         print("DataFrame após macro:")
         print(df_macro.head())
@@ -63,7 +67,8 @@ def upload_files():
         processador.excel_df = df_macro
 
         # Para simplificar, salvaremos sempre aqui:
-        caminho_resultado = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+        caminho_resultado = os.path.join(
+            app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
 
         print(f"Salvando arquivo final em: {caminho_resultado}")
         processador.salvar_excel_preenchido(caminho_resultado)
@@ -82,9 +87,12 @@ def upload_files():
         return jsonify({'error': str(e)}), 500
 
 # Rota para fazer download do arquivo Excel gerado após processamento
+
+
 @app.route('/download', methods=['GET'])
 def download():
-    caminho_arquivo = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+    caminho_arquivo = os.path.join(
+        app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
 
     if os.path.exists(caminho_arquivo):
         print(f"Enviando arquivo: {caminho_arquivo}")
