@@ -7,11 +7,8 @@ import pandas as pd
 import os
 from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_maio_2025
 from utils.macro import colar_e_executar_macro
-import tempfile
 
-
-
-# Rota raiz, apenas para teste de funcionamento do backend Flask
+# Rota que processa os dados no back end, recebe csv, recebe excel e executa macro, gerando resultado.xlsx
 @app.route('/upload', methods=['POST'])
 def upload_files():
     print("Recebendo arquivos...")
