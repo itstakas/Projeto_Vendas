@@ -4,9 +4,9 @@ import datetime
 import pandas as pd
 import tempfile
 import os
-import gc
-import time
-from main import app
+# import gc
+# import time
+# from main import app
 import shutil
 
 def colar_e_executar_macro(df, caminho_macro):

@@ -1,18 +1,19 @@
-from main import app
-from flask import request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 from controladores.Classes import ProcessaDados
 from controladores.comparador import comparar_e_preencher
-import pandas as pd
 import os
 from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual
 from utils.macro import colar_e_executar_macro
 
-# Rota que processa os dados no back end, recebe csv, recebe excel e executa macro, gerando resultado.xlsx
+views_bp = Blueprint('views', __name__)
 
 
-@app.route('/upload', methods=['POST'])
+@views_bp.route('/upload', methods=['POST'])
 def upload_files():
+
+    from flask import current_app
+
     print("Recebendo arquivos...")
 
     csv_file = request.files.get('csv')
@@ -30,8 +31,8 @@ def upload_files():
         csv_filename = secure_filename(csv_file.filename)
         excel_filename = secure_filename(excel_file.filename)
 
-        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], csv_filename)
-        excel_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_filename)
+        csv_path = os.path.join(current_app.config['UPLOAD_FOLDER'], csv_filename)
+        excel_path = os.path.join(current_app.config['UPLOAD_FOLDER'], excel_filename)
 
         print(f"Salvando CSV em: {csv_path}")
         csv_file.save(csv_path)
@@ -68,7 +69,7 @@ def upload_files():
 
         # Para simplificar, salvaremos sempre aqui:
         caminho_resultado = os.path.join(
-            app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+            current_app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
 
         print(f"Salvando arquivo final em: {caminho_resultado}")
         processador.salvar_excel_preenchido(caminho_resultado)
@@ -89,10 +90,13 @@ def upload_files():
 # Rota para fazer download do arquivo Excel gerado após processamento
 
 
-@app.route('/download', methods=['GET'])
+@views_bp.route('/download', methods=['GET'])
 def download():
+
+    from flask import current_app
+     
     caminho_arquivo = os.path.join(
-        app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+        current_app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
 
     if os.path.exists(caminho_arquivo):
         print(f"Enviando arquivo: {caminho_arquivo}")

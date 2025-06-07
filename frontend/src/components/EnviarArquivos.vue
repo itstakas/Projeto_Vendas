@@ -18,7 +18,7 @@ const props = defineProps({
     arquivoExcel: File,
 })
 
-const emit = defineEmits(['respostaRecebida', 'arquivoPronto'])
+const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'dadosProntos'])
 
 const carregando = ref(false)
 const resposta = ref(null)
@@ -52,6 +52,12 @@ const enviarArquivos = async()=>{
 
         emit('respostaRecebida', resposta.data)
         emit('arquivoPronto', true)
+
+        emit('dadosProntos', {
+            clientes: resposta.value.clientes,
+            vendedores: resposta.value.vendedores
+        })
+
     } catch(error) {
         console.error('Erro no envio: ', error)
         resposta.value = error?.response?.data || 'Erro desconhecido'

@@ -40,6 +40,7 @@
         :arquivoExcel="arquivoExcel"
         @respostaRecebida="resposta = $event"
         @arquivoPronto="mostrarBotaoDownload = $event"
+        @dadosProntos="enviarParaApp"
     />
 
     <BaixarArquivo :visivel="mostrarBotaoDownload"/>
@@ -55,7 +56,9 @@
 <script setup>
 import BaixarArquivo from './BaixarArquivo.vue';
 import EnviarArquivos from './EnviarArquivos.vue';
-import { ref } from 'vue';
+import { ref, defineEmits } from 'vue';
+
+const emit = defineEmits(['dadosProntos'])
 
 const mostrarBotaoDownload = ref(false)
 
@@ -69,6 +72,10 @@ const resposta = ref(null)
 
 const abrirCsv = () => csvInput.value.click()
 const abrirExcel = () => excelInput.value.click()
+
+const enviarParaApp = ({ clientes, vendedores }) => {
+    emit('dadosProntos', [clientes,vendedores])
+}
 
 const selecionarCsv = (event) => {
     const file = event.target.files[0]
