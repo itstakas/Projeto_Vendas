@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-white p-4 rounded shadow-md">
-    <h2 class="text-xl font-semibold mb-4">Vendedores e Vendas</h2>
-    <table class="w-full table-auto border">
-      <thead class="bg-gray-200">
+  <div class="dashboard-vendedores">
+    <h2>Vendedores e Vendas</h2>
+    <table>
+      <thead>
         <tr>
-          <th class="px-4 py-2 border">Nome do Vendedor</th>
-          <th class="px-4 py-2 border">Quantidade de Vendas</th>
+          <th>Nome do Vendedor</th>
+          <th>Quantidade de Vendas</th>
         </tr>
       </thead>
       <tbody>
@@ -13,10 +13,9 @@
           v-for="vendedor in vendedores"
           :key="vendedor.nome"
           @click="$emit('selecionar-vendedor', vendedor)"
-          class="cursor-pointer hover:bg-gray-100"
         >
-          <td class="px-4 py-2 border text-blue-600 hover:underline">{{ vendedor.nome }}</td>
-          <td class="px-4 py-2 border text-center">{{ vendedor.total_vendas }}</td>
+          <td>{{ vendedor.nome }}</td>
+          <td>{{ vendedor.total_vendas }}</td>
         </tr>
       </tbody>
     </table>
@@ -26,3 +25,30 @@
 <script setup>
 defineProps(['vendedores'])
 </script>
+
+<style scoped>
+.dashboard-vendedores {
+  margin-top: 30px;
+  background: #1f1f1f;
+  padding: 20px;
+  border-radius: 10px;
+  color: #ffffff;
+}
+
+.dashboard-vendedores table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-vendedores th,
+.dashboard-vendedores td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+.dashboard-vendedores tr:hover {
+  background-color: #2a2a2a;
+  cursor: pointer;
+}
+</style>
