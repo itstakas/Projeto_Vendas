@@ -347,6 +347,15 @@ button:hover{
   background-color: rgb(126, 126, 126);
 }
 
+.botoes-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+
 /* h2{
   display: none;
 } */

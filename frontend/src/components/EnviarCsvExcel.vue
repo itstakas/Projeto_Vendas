@@ -1,32 +1,51 @@
 <template>
-  <div class="h1">
-    <h1>Upload de arquivos</h1>
+  <div class="p-4 bg-white rounded shadow-md w-full max-w-md mx-auto">
+    <h1 class="text-2xl font-semibold mb-4 text-center">Upload de Arquivos</h1>
 
-    <button @click="triggerCsvInput">Selecionar arquivo CSV</button>
-    <input
-      type="file"
-      ref="csvInput"
-      @change="onCsvSelected"
-      accept=".csv"
-      style="display: none"
-    />
+    <div class="space-y-4">
+      <div>
+        <button
+          class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
+          @click="triggerCsvInput"
+        >
+          Selecionar arquivo CSV
+        </button>
+        <input
+          type="file"
+          ref="csvInput"
+          @change="onCsvSelected"
+          accept=".csv"
+          style="display: none"
+        />
+        <p v-if="arquivoCsv" class="text-sm text-gray-600 mt-1">{{ arquivoCsv.name }}</p>
+      </div>
 
-    <button @click="triggerExcelInput">Selecionar arquivo Excel</button>
-    <input
-      type="file"
-      ref="excelInput"
-      @change="onExcelSelected"
-      accept=".xlsx,.xls"
-      style="display: none"
-    />
+      <div>
+        <button
+          class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
+          @click="triggerExcelInput"
+        >
+          Selecionar arquivo Excel
+        </button>
+        <input
+          type="file"
+          ref="excelInput"
+          @change="onExcelSelected"
+          accept=".xlsx,.xls"
+          style="display: none"
+        />
+        <p v-if="arquivoExcel" class="text-sm text-gray-600 mt-1">{{ arquivoExcel.name }}</p>
+      </div>
 
-    <button
-      @click="enviarArquivos"
-      :disabled="!arquivoCsv || !arquivoExcel || enviando"
-    >
-      <span v-if="enviando" class="loader"></span>
-      {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
-    </button>
+      <button
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
+        @click="enviarArquivos"
+        :disabled="!arquivoCsv || !arquivoExcel || enviando"
+      >
+        <span v-if="enviando" class="loader mr-2"></span>
+        {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -34,13 +53,16 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
+// Refs para arquivos
 const arquivoCsv = ref(null)
 const arquivoExcel = ref(null)
 const enviando = ref(false)
 
+// Refs para inputs
 const csvInput = ref(null)
 const excelInput = ref(null)
 
+// Emissor de eventos
 const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'vendedoresAtualizados'])
 
 function triggerCsvInput() {
@@ -72,12 +94,14 @@ async function enviarArquivos() {
   formData.append('excel', arquivoExcel.value)
 
   try {
+    // Envia arquivos para o backend
     const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     emit('respostaRecebida', response.data)
 
+    // Busca os dados de vendedores processados
     const vendedoresRes = await axios.get('http://localhost:5000/vendedores_tele')
     emit('vendedoresAtualizados', vendedoresRes.data)
 
@@ -90,3 +114,21 @@ async function enviarArquivos() {
   }
 }
 </script>
+
+<style scoped>
+.loader {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
