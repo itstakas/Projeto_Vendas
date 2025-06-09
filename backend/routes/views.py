@@ -99,7 +99,6 @@ def vendedores_tele():
 
     return jsonify(resultado)
 
-
 @views.route('/vendedor_tele/<nome>', methods=['GET'])
 def detalhes_vendedor(nome):
     caminho = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
@@ -107,10 +106,22 @@ def detalhes_vendedor(nome):
         return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
 
     df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
-    if 'VENDEDOR_TELE' not in df.columns:
-        return jsonify({'error': 'Coluna VENDEDOR_TELE não encontrada'}), 400
 
-    df['DATA_CONTRATO'] = pd.to_datetime(df['DATA_CONTRATO'], errors='coerce')
-    df_vendedor = df[df['VENDEDOR_TELE'] == nome]
+    if 'VENDEDOR_TELE' not in df.columns or 'DATA_CONTRATO' not in df.columns:
+        return jsonify({'error': 'Colunas obrigatórias não encontradas'}), 400
 
-    return jsonify(df_vendedor.to_dict(orient='records'))
+    df['VENDEDOR_TELE_NORM'] = df['VENDEDOR_TELE'].str.strip().str.lower()
+    nome_normalizado = nome.strip().lower()
+
+    df_vendedor = df[df['VENDEDOR_TELE_NORM'] == nome_normalizado]
+    if df_vendedor.empty:
+        return jsonify([])
+
+    if 'NOME' not in df.columns:
+        return jsonify({'error': 'Coluna NOME não encontrada'}), 400
+
+    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+
+    return jsonify(df_vendedor[['NOME', 'DATA_CONTRATO']].to_dict(orient='records'))
+

@@ -16,7 +16,7 @@
           class="cursor-pointer hover:bg-gray-100"
         >
           <td class="px-4 py-2 border text-blue-600 hover:underline">{{ vendedor.nome }}</td>
-          <td class="px-4 py-2 border text-center">{{ vendedor.qtd_clientes }}</td>
+          <td class="px-4 py-2 border text-center">{{ vendedor.total_vendas }}</td>
         </tr>
       </tbody>
     </table>

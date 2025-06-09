@@ -49,8 +49,26 @@ export default {
       this.vendedores = dados
       this.vendedorSelecionado = null
     },
-    mostrarDetalhes(vendedor) {
-      this.vendedorSelecionado = vendedor
+
+    async mostrarDetalhes(vendedor) {
+      // Mostra o nome e flag de carregamento
+      this.vendedorSelecionado = {
+        nome: vendedor.nome,
+        carregando: true,
+        clientes: []
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/vendedor_tele/${encodeURIComponent(vendedor.nome)}`)
+        const clientes = await response.json()
+
+        this.vendedorSelecionado.clientes = clientes
+      } catch (error) {
+        console.error('Erro ao buscar detalhes:', error)
+        this.vendedorSelecionado.clientes = []
+      } finally {
+        this.vendedorSelecionado.carregando = false
+      }
     }
   }
 }
