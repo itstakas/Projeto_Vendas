@@ -53,10 +53,7 @@ const enviarArquivos = async()=>{
         emit('respostaRecebida', resposta.data)
         emit('arquivoPronto', true)
 
-        emit('dadosProntos', {
-            clientes: resposta.value.clientes,
-            vendedores: resposta.value.vendedores
-        })
+        emit('dadosProntos', resposta.value)
 
     } catch(error) {
         console.error('Erro no envio: ', error)

@@ -40,7 +40,7 @@
         :arquivoExcel="arquivoExcel"
         @respostaRecebida="resposta = $event"
         @arquivoPronto="mostrarBotaoDownload = $event"
-        @dadosProntos="enviarParaApp"
+        @dadosProntos="exibirDashboard"
     />
 
     <BaixarArquivo :visivel="mostrarBotaoDownload"/>
@@ -73,8 +73,14 @@ const resposta = ref(null)
 const abrirCsv = () => csvInput.value.click()
 const abrirExcel = () => excelInput.value.click()
 
-const enviarParaApp = ({ clientes, vendedores }) => {
-    emit('dadosProntos', [clientes,vendedores])
+const dadosVendedores = ref([])
+const mostrarDashboard = ref(false)
+
+const exibirDashboard = (dados) => {
+    dadosVendedores.value = dados
+    mostrarDashboard.value = true
+
+    emit('dadosProntos', dados)
 }
 
 const selecionarCsv = (event) => {

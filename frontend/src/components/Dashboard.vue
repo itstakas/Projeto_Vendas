@@ -1,7 +1,7 @@
 <template>
     <div class="dashboard-container">
         <h2>Dashboard de vendas e clientes</h2>
-        <div v-if="loading">Carregando dados</div>
+        <div v-if="!dados.length">Carregando dados</div>
         <ul v-else>
             <li v-for="vendedor in dados" v-bind:key="vendedor.vendedor">
                 <strong>{{ vendedor.vendedor }} - {{ vendedor.qtd_clientes }} clientes</strong>
@@ -14,20 +14,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import axios from 'axios';
-
-const dados = ref([])
-const loading = reg (true)
-
-onMounted(async() => {
-    try {
-        const res = await axios.get('http://localhost:5000/api/dashboard')
-        dados.value = res.data
-    } catch (err) {
-        console.log('Erro ao carregar dados: ', err)
-    } finally {
-        loading.value = false
+defineProps({
+    dados: {
+        type: Array,
+        required: true
     }
 })
 </script>

@@ -3,30 +3,22 @@ import { ref } from 'vue';
 import EnviarCsvExcel from './components/EnviarCsvExcel.vue';
 import Dashboard from './components/Dashboard.vue'
 
-const dadosVendedores = ref([])
-const dadosClientes = ref([])
 const mostrarDashboard = ref(false)
+const dadosVendedores = ref([])
 
-const exibirDashboard = (clientes, vendedores) => {
-    dadosClientes.value = clientes
-    dadosVendedores.value = vendedores
-    mostrarDashboard.value = true
+const exibirDashboard = (payload) => {
+  dadosVendedores.value = payload
+  mostrarDashboard.value = true
 }
-
-// const receberDados = (payload) => {
-//     dadosVendedores.value = payload.vendedores
-//     dadosClientes.value = payload.clientes
-// }
 </script>
 
 <template>  
 <div>
-    <EnviarCsvExcel @dadosProntos="receberDados" />
+    <EnviarCsvExcel @dadosProntos="exibirDashboard" />
 
     <Dashboard
         v-if="mostrarDashboard"
-        :vendedores="dadosVendedores"
-        :clientes="dadosClientes"
+        :dados="dadosVendedores"
     />
 </div>
 </template>
