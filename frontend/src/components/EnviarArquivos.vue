@@ -18,7 +18,7 @@ const props = defineProps({
     arquivoExcel: File,
 })
 
-const emit = defineEmits(['respostaRecebida', 'arquivoPronto'])
+const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'vendedoresAtualizados'])
 
 const carregando = ref(false)
 const resposta = ref(null)
@@ -41,17 +41,17 @@ const enviarArquivos = async()=>{
         const response = await axios.post(
             'http://127.0.0.1:5000/upload',
             formData, 
-            // {
-            //     headers: {
-            //         'Content-Type': 'multipart/form-data'
-            //     }
-            // }
         )
         resposta.value = response.data
         console.log('Resposta do back: ', resposta.value)
 
-        emit('respostaRecebida', resposta.data)
+        emit('respostaRecebida', resposta.value)
         emit('arquivoPronto', true)
+
+        const vendedoresRes = await axios.get('http://127.0.0.1:5000/vendedores_tele')
+        console.log('Vendedores recebidos: ', vendedoresRes.data)
+
+        emit('vendedoresAtualizados', vendedoresRes.data)
     } catch(error) {
         console.error('Erro no envio: ', error)
         resposta.value = error?.response?.data || 'Erro desconhecido'

@@ -1,115 +1,92 @@
-
 <template>
-    <div class="container">
-        <h1>Upload de arquivos: </h1>
+  <div class="h1">
+    <h1>Upload de arquivos</h1>
 
-        <input type="file" ref="csvInput" accept=".csv" style="display: none;" @change="selecionarCsv"/>
-        <input type="file" ref="excelInput" accept=".xlsx, .xls" style="display: none;" @change="selecionarExcel"/>
-    
-        <button @click="abrirCsv">Enviar CSV</button>
-        <button @click="abrirExcel">Enviar EXCEL</button>
+    <button @click="triggerCsvInput">Selecionar arquivo CSV</button>
+    <input
+      type="file"
+      ref="csvInput"
+      @change="onCsvSelected"
+      accept=".csv"
+      style="display: none"
+    />
 
-        <!-- <div>
-        <button
-        v-on:click="enviarArquivos"
-        v-bind="!arquivoCsv || !arquivoExcel || carregando"
+    <button @click="triggerExcelInput">Selecionar arquivo Excel</button>
+    <input
+      type="file"
+      ref="excelInput"
+      @change="onExcelSelected"
+      accept=".xlsx,.xls"
+      style="display: none"
+    />
+
+    <button
+      @click="enviarArquivos"
+      :disabled="!arquivoCsv || !arquivoExcel || enviando"
     >
-        {{ carregando ? 'Enviando...' : 'Enviar arquivos' }}
+      <span v-if="enviando" class="loader"></span>
+      {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
     </button>
-        -->
-        
-
-    <input 
-        type="file"
-        ref="csvInput"
-        accept=".csv"
-        @change="selecionarCsv"
-        style="display: none;"
-    />
-
-    <input 
-        type="file"
-        ref="excelInput"
-        accept=".xlsx, .xls"
-        @change="selecionarExcel"
-        style="display: none;"
-    />
-    </div>
-    <EnviarArquivos
-        :arquivoCsv="arquivoCsv"
-        :arquivoExcel="arquivoExcel"
-        @respostaRecebida="resposta = $event"
-        @arquivoPronto="mostrarBotaoDownload = $event"
-    />
-
-    <BaixarArquivo :visivel="mostrarBotaoDownload"/>
-
-
-    <div v-if="resposta">
-        <h2>Resposta do servidor:</h2>
-        <pre>{{ resposta }}</pre>
-    </div>
-    
+  </div>
 </template>
 
 <script setup>
-import BaixarArquivo from './BaixarArquivo.vue';
-import EnviarArquivos from './EnviarArquivos.vue';
-import { ref } from 'vue';
+import { ref } from 'vue'
+import axios from 'axios'
 
-const mostrarBotaoDownload = ref(false)
+const arquivoCsv = ref(null)
+const arquivoExcel = ref(null)
+const enviando = ref(false)
 
 const csvInput = ref(null)
 const excelInput = ref(null)
 
-const arquivoCsv = ref(null)
-const arquivoExcel = ref(null)
+const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'vendedoresAtualizados'])
 
-const resposta = ref(null)
-
-const abrirCsv = () => csvInput.value.click()
-const abrirExcel = () => excelInput.value.click()
-
-const selecionarCsv = (event) => {
-    const file = event.target.files[0]
-    if (file && file.name.endsWith('.csv')){
-        arquivoCsv.value = file
-    } else {
-        alert('Arquivo CSV invalido')
-        arquivoCsv.value = null
-    }
+function triggerCsvInput() {
+  csvInput.value.click()
 }
 
-const selecionarExcel = (event) => {
-    const file = event.target.files[0]
-    if(file && /\.(xls|xlsx)$/i.test(file.name)) {
-        arquivoExcel.value = file
-    } else {
-        alert('Arquivo Excel inválido')
-        arquivoExcel.value = null
-    }
+function triggerExcelInput() {
+  excelInput.value.click()
 }
 
+function onCsvSelected(event) {
+  arquivoCsv.value = event.target.files[0]
+}
+
+function onExcelSelected(event) {
+  arquivoExcel.value = event.target.files[0]
+}
+
+async function enviarArquivos() {
+  if (!arquivoCsv.value || !arquivoExcel.value) {
+    alert('Envie ambos os arquivos antes de enviar.')
+    return
+  }
+
+  enviando.value = true
+
+  const formData = new FormData()
+  formData.append('csv', arquivoCsv.value)
+  formData.append('excel', arquivoExcel.value)
+
+  try {
+    const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    emit('respostaRecebida', response.data)
+
+    const vendedoresRes = await axios.get('http://localhost:5000/vendedores_tele')
+    emit('vendedoresAtualizados', vendedoresRes.data)
+
+    emit('arquivoPronto', true)
+  } catch (error) {
+    alert('Erro ao enviar arquivos: ' + error.message)
+    emit('respostaRecebida', { error: error.message })
+  } finally {
+    enviando.value = false
+  }
+}
 </script>
-
-<style scoped>
-.progress-bar {
-  height: 20px;
-  width: 100%;
-  background: linear-gradient(90deg, #3498db 0%, #85c1e9 50%, #3498db 100%);
-  background-size: 200% 100%;
-  animation: carregando 1s linear infinite;
-  border-radius: 4px;
-  margin-bottom: 15px; 
-}
-
-@keyframes carregando {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-</style>
