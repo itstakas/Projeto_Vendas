@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 
+
 def remover_colunas_desnecessarias(df: pd.DataFrame) -> pd.DataFrame:
     """Remove colunas irrelevantes se existirem."""
     colunas_para_remover = [
@@ -35,7 +36,10 @@ def remover_clientes_excluidos(df: pd.DataFrame) -> pd.DataFrame:
         'GEANNE DA SILVA BORGES',
         'SANDRA MARIA DA SILVA SANTOS',
         'MILCE FERREIRA DA COSTA',
-        'THAÍS FONTANA DA CUNHA'
+        'THAÍS FONTANA DA CUNHA',
+        'GISLAINE LOPES DA SILVA',
+        'LUCAS HENRIQUE',
+        'SÔNIA GREFFE CHAVES'
     }
 
     if 'NOME' in df.columns:
