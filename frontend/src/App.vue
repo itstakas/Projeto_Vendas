@@ -62,7 +62,15 @@ export default {
         const response = await fetch(`http://localhost:5000/vendedor_tele/${encodeURIComponent(vendedor.nome)}`)
         const clientes = await response.json()
 
-        this.vendedorSelecionado.clientes = clientes
+        console.log('Clientes retornados da API: ', clientes)
+
+        // this.vendedorSelecionado.clientes = clientes
+        this.vendedorSelecionado = {
+          nome: vendedor.nome,
+          carregando: false,
+          clientes: clientes
+        }
+
       } catch (error) {
         console.error('Erro ao buscar detalhes:', error)
         this.vendedorSelecionado.clientes = []

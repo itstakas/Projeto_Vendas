@@ -4,8 +4,12 @@ from controladores.Classes import ProcessaDados
 from controladores.comparador import comparar_e_preencher
 from utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
 from utils.macro import colar_e_executar_macro
+from utils.adicionar_clientes import adicionar_clientes_manualmente
 import os
 import pandas as pd
+import traceback
+from unidecode import unidecode
+import re
 
 views = Blueprint('views', __name__)
 
@@ -48,6 +52,7 @@ def upload_files():
         processador.excel_df = df_macro
         caminho_resultado = os.path.join(upload_folder, 'resultado.xlsx')
         processador.salvar_excel_preenchido(caminho_resultado)
+        adicionar_clientes_manualmente(caminho_resultado)
 
         if not os.path.exists(caminho_resultado):
             return jsonify({'error': 'Erro ao salvar o arquivo final'}), 500
@@ -55,6 +60,7 @@ def upload_files():
         return jsonify({'download_path': '/download'}), 200
 
     except Exception as e:
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
@@ -99,29 +105,59 @@ def vendedores_tele():
 
     return jsonify(resultado)
 
+# @views.route('/vendedor_tele/<nome>', methods=['GET'])
+# def detalhes_vendedor(nome):
+#     caminho = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+
+#     if not os.path.exists(caminho):
+#         return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
+
+#     df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+#     if 'VENDEDOR_TELE' not in df.columns or 'DATA_CONTRATO' not in df.columns or 'NOME' not in df.columns:
+#         return jsonify({'error': 'Colunas obrigatórias não encontradas'}), 400
+
+#     # Normaliza os nomes para comparação
+#     def normalizar(texto):
+#         if pd.isna(texto):
+#             return ''
+#         return unidecode(str(texto)).strip().upper()
+
+#     df['VENDEDOR_TELE_NORM'] = df['VENDEDOR_TELE'].apply(normalizar)
+#     nome_normalizado = normalizar(nome)
+
+#     df_vendedor = df[df['VENDEDOR_TELE'] == nome_normalizado].copy()
+
+#     if df_vendedor.empty:
+#         return jsonify([])
+
+#     # Trata a coluna DATA_CONTRATO
+#     df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+#     df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+
+#     print(df_vendedor[['NOME', 'DATA_CONTRATO']].to_dict(orient='records'))
+
+#     return jsonify(df_vendedor[['NOME', 'DATA_CONTRATO']].to_dict(orient='records'))
 @views.route('/vendedor_tele/<nome>', methods=['GET'])
 def detalhes_vendedor(nome):
-    caminho = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
     if not os.path.exists(caminho):
-        return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
+        return jsonify([])
 
     df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
 
-    if 'VENDEDOR_TELE' not in df.columns or 'DATA_CONTRATO' not in df.columns:
-        return jsonify({'error': 'Colunas obrigatórias não encontradas'}), 400
-
-    df['VENDEDOR_TELE_NORM'] = df['VENDEDOR_TELE'].str.strip().str.lower()
-    nome_normalizado = nome.strip().lower()
-
-    df_vendedor = df[df['VENDEDOR_TELE_NORM'] == nome_normalizado]
-    if df_vendedor.empty:
+    if 'NOME' not in df.columns or 'DATA_CONTRATO' not in df.columns or 'VENDEDOR_TELE' not in df.columns:
         return jsonify([])
 
-    if 'NOME' not in df.columns:
-        return jsonify({'error': 'Coluna NOME não encontrada'}), 400
+    nome_normalizado = nome.strip().lower()
+    df['VENDEDOR_TELE'] = df['VENDEDOR_TELE'].fillna('').str.strip().str.lower()
+    df_vendedor = df[df['VENDEDOR_TELE'] == nome_normalizado].copy()
 
     df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+
+    # 👇 Trata datas inválidas como string vazia
     df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("")
 
-    return jsonify(df_vendedor[['NOME', 'DATA_CONTRATO']].to_dict(orient='records'))
-
+    resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
+    return jsonify(resultado.to_dict(orient='records'))
