@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-vendedores">
-    <h2>Vendedores e Vendas</h2>
+    <h2>Vendedores Tele</h2>
     <table>
       <thead>
         <tr>

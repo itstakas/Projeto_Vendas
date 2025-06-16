@@ -63,7 +63,6 @@ def upload_files():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
 @views.route('/download', methods=['GET'])
 def download():
     caminho_arquivo = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
@@ -75,7 +74,6 @@ def download():
             download_name='resultado.xlsx'
         )
     return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
-
 
 @views.route('/vendedores_tele', methods=['GET'])
 def vendedores_tele():
@@ -105,39 +103,6 @@ def vendedores_tele():
 
     return jsonify(resultado)
 
-# @views.route('/vendedor_tele/<nome>', methods=['GET'])
-# def detalhes_vendedor(nome):
-#     caminho = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
-
-#     if not os.path.exists(caminho):
-#         return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
-
-#     df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
-
-#     if 'VENDEDOR_TELE' not in df.columns or 'DATA_CONTRATO' not in df.columns or 'NOME' not in df.columns:
-#         return jsonify({'error': 'Colunas obrigatórias não encontradas'}), 400
-
-#     # Normaliza os nomes para comparação
-#     def normalizar(texto):
-#         if pd.isna(texto):
-#             return ''
-#         return unidecode(str(texto)).strip().upper()
-
-#     df['VENDEDOR_TELE_NORM'] = df['VENDEDOR_TELE'].apply(normalizar)
-#     nome_normalizado = normalizar(nome)
-
-#     df_vendedor = df[df['VENDEDOR_TELE'] == nome_normalizado].copy()
-
-#     if df_vendedor.empty:
-#         return jsonify([])
-
-#     # Trata a coluna DATA_CONTRATO
-#     df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
-#     df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
-
-#     print(df_vendedor[['NOME', 'DATA_CONTRATO']].to_dict(orient='records'))
-
-#     return jsonify(df_vendedor[['NOME', 'DATA_CONTRATO']].to_dict(orient='records'))
 @views.route('/vendedor_tele/<nome>', methods=['GET'])
 def detalhes_vendedor(nome):
     caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
@@ -155,9 +120,11 @@ def detalhes_vendedor(nome):
 
     df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
 
-    # 👇 Trata datas inválidas como string vazia
+    # Trata datas inválidas como string vazia
     df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
-    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("")
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("03/06/2025")
 
     resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
     return jsonify(resultado.to_dict(orient='records'))
+
+

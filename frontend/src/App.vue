@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="">
     <!-- Envio de arquivos -->
     <EnviarCsvExcel
       @vendedoresAtualizados="receberDados"
@@ -9,8 +9,8 @@
     <!-- Botão de download (usando componente separado) -->
     <BaixarArquivo v-if="arquivoGerado" />
 
-    <!-- Lista de vendedores -->
-    <ListaVendedores
+    <div class="container">
+      <ListaVendedores
       v-if="vendedores.length"
       :vendedores="vendedores"
       @selecionar-vendedor="mostrarDetalhes"
@@ -21,6 +21,8 @@
       v-if="vendedorSelecionado"
       :vendedor="vendedorSelecionado"
     />
+    </div>
+    <!-- Lista de vendedores -->
   </div>
 </template>
 
@@ -81,3 +83,12 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.container{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+</style>
