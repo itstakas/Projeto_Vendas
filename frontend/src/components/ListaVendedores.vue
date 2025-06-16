@@ -20,6 +20,29 @@
       </tbody>
     </table>
   </div>
+  <div class="dashboard-vendedores">
+      <h2>Vendedores Porta a Porta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome do Vendedor</th>
+          <th>Quantidade de Vendas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="vendedor in vendedores"
+          :key="vendedor.nome"
+          @click="$emit('selecionar-vendedor', vendedor)"
+        >
+          <td>{{ vendedor.nome }}</td>
+          <td>{{ vendedor.total_vendas }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
 </template>
 
 <script setup>

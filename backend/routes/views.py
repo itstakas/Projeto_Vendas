@@ -127,4 +127,56 @@ def detalhes_vendedor(nome):
     resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
     return jsonify(resultado.to_dict(orient='records'))
 
+@views.route('/vendedores_porta_a_porta', methods=['GET'])
+def vendedores_porta_a_porta():
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
+    if not os.path.exists(caminho):
+        return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
+
+    df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+    if 'DATA_CONTRATO' not in df.columns or 'VENDEDOR' not in df.columns:
+        return jsonify({'error': 'Colunas esperadas não encontradas no Excel'}), 400
+
+    df['DATA_CONTRATO'] = pd.to_datetime(df['DATA_CONTRATO'], errors='coerce')
+    df_vendedores = df.dropna(subset=['VENDEDOR']).copy()
+    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period('M').astype(str)
+
+    vendas_por_vendedor = df_vendedores.groupby(['VENDEDOR', 'MES']).size().reset_index(name='QTD_VENDAS')
+
+    resultado = []
+    for vendedor in vendas_por_vendedor['VENDEDOR'].unique():
+        vendas = vendas_por_vendedor[vendas_por_vendedor['VENDEDOR'] == vendedor]
+        resultado.append({
+            'nome': vendedor,
+            'total_vendas': int(vendas['QTD_VENDAS'].sum()),
+            'vendas_mensais': vendas[['MES', 'QTD_VENDAS']].to_dict(orient='records')
+        })
+
+    return jsonify(resultado)
+
+@views.route('/vendedores_porta_a_porta/<nome>', methods=['GET'])
+def detalhes_vendedor_porta_a_porta(nome):
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
+    if not os.path.exists(caminho):
+        return jsonify([])
+
+    df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+    if 'NOME' not in df.columns or 'DATA_CONTRATO' not in df.columns or 'VENDEDOR' not in df.columns:
+        return jsonify([])
+
+    nome_normalizado = nome.strip().lower()
+    df['VENDEDOR'] = df['VENDEDOR'].fillna('').str.strip().str.lower()
+    df_vendedor = df[df['VENDEDOR'] == nome_normalizado].copy()
+
+    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+
+    # Trata datas inválidas como string vazia
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("03/06/2025")
+
+    resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
+    return jsonify(resultado.to_dict(orient='records'))
+
 
