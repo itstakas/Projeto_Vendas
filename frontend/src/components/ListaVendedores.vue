@@ -31,7 +31,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="vendedor in VendedoresPorta"
+          v-for="vendedor in vendedoresPorta"
           :key="vendedor.nome"
           @click="$emit('selecionar-vendedor', vendedor)"
         >

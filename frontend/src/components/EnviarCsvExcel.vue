@@ -63,7 +63,7 @@ const csvInput = ref(null)
 const excelInput = ref(null)
 
 // Emissor de eventos
-const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'vendedoresAtualizados'])
+const emit = defineEmits(['arquivoPronto', 'vendedoresTele', 'vendedoresPorta'])
 
 function triggerCsvInput() {
   csvInput.value.click()
@@ -103,10 +103,10 @@ async function enviarArquivos() {
 
     // Busca os dados de vendedores processados
     const vendedoresRes = await axios.get('http://localhost:5000/vendedores_tele')
-    emit('vendedoresAtualizados', vendedoresRes.data)
+    emit('vendedoresTele', vendedoresRes.data)
 
     const vendedoresPorta = await axios.get('http://localhost:5000/vendedores_porta_a_porta')
-    emit('vendedoresAtualizados', vendedoresPorta.data)
+    emit('vendedoresPorta', vendedoresPorta.data)
     
     emit('arquivoPronto', true)
   } catch (error) {
