@@ -10,7 +10,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="vendedor in vendedores"
+          v-for="vendedor in vendedoresTele"
           :key="vendedor.nome"
           @click="$emit('selecionar-vendedor', vendedor)"
         >
@@ -31,7 +31,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="vendedor in vendedores"
+          v-for="vendedor in VendedoresPorta"
           :key="vendedor.nome"
           @click="$emit('selecionar-vendedor', vendedor)"
         >
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-defineProps(['vendedores'])
+defineProps(['vendedoresTele', 'VendedoresPorta'])
 </script>
 
 <style scoped>

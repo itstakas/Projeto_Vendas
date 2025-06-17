@@ -178,5 +178,3 @@ def detalhes_vendedor_porta_a_porta(nome):
 
     resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
     return jsonify(resultado.to_dict(orient='records'))
-
-

@@ -105,6 +105,9 @@ async function enviarArquivos() {
     const vendedoresRes = await axios.get('http://localhost:5000/vendedores_tele')
     emit('vendedoresAtualizados', vendedoresRes.data)
 
+    const vendedoresPorta = await axios.get('http://localhost:5000/vendedores_porta_a_porta')
+    emit('vendedoresAtualizados', vendedoresPorta.data)
+    
     emit('arquivoPronto', true)
   } catch (error) {
     alert('Erro ao enviar arquivos: ' + error.message)

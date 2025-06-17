@@ -22,7 +22,6 @@
       :vendedor="vendedorSelecionado"
     />
     </div>
-    <!-- Lista de vendedores -->
   </div>
 </template>
 
