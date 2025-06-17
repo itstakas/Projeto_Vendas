@@ -13,8 +13,10 @@ const arquivoGerado = ref(false)
 function receberTele(dados) {
   vendedoresTele.value = dados
 }
+
 function receberPorta(dados) {
   vendedoresPorta.value = dados
+
 }
 
 async function mostrarDetalhes(vendedor) {

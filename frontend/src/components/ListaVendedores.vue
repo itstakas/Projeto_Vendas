@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-defineProps(['vendedoresTele', 'VendedoresPorta'])
+defineProps(['vendedoresTele', 'vendedoresPorta'])
 </script>
 
 <style scoped>
