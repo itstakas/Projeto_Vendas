@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import EnviarCsvExcel from './components/EnviarCsvExcel.vue'
 import ListaVendedores from './components/ListaVendedores.vue'
 import DetalhesVendedor from './components/DetalhesVendedor.vue'
@@ -9,6 +9,7 @@ const vendedoresTele = ref([])
 const vendedoresPorta = ref([])
 const vendedorSelecionado = ref(null)
 const arquivoGerado = ref(false)
+const filtroCategoria = ref("todos") // 'todos' | 'porta' | 'externa' -são as opções de filtro
 
 function receberTele(dados) {
   vendedoresTele.value = dados
@@ -42,6 +43,34 @@ async function mostrarDetalhes(vendedor) {
     vendedorSelecionado.value.carregando = false
   }
 }
+
+const nomesPortaPorta = [
+  "GLEICI IDALINA PEREIRA RUIZ",
+  "VEND.SILAS DE OLIVEIRA",
+  "MARIA ROSELI",
+  "ANA BEATRIZ DO PRADO SCAVONE",
+  "ELIZABETE ALVES",
+  "TALITA JUNIA DA CONCEICAO SILVA"
+]
+
+const nomesExterna = [
+  "ANDRE MENOSSI",
+  "MARIO ANTONIO DELGADO MOREL",
+  "NATANAEL DE SOUZA BRASIL",
+  "ANA GRACIELA BENITEZ",
+  "DIANA ELIZABETH FERREIRA PALACIOS",
+  "DEMETRIO FIDEL INSFRAN BALBUENA"
+]
+
+const vendedoresPortaFiltrados = computed(() => {
+  if (filtroCategoria.value === 'porta') {
+    return vendedoresPorta.value.filter(v => nomesPortaPorta.includes(v.nome))
+  } else if (filtroCategoria.value === 'externa'){
+    return vendedoresPorta.value.filter(v => nomesExterna.includes(v.nome))
+  } else {
+    return vendedoresPorta.value // todos
+  }
+})
 </script>
 
 <template>
@@ -54,11 +83,22 @@ async function mostrarDetalhes(vendedor) {
 
     <BaixarArquivo v-if="arquivoGerado" />
 
+    <!-- <div class="p-2">
+      <label for="">Filtrar Vendedores</label>
+      <select name="" id="">
+        <option value="todos">Todos</option>
+        <option value="porta">Porta</option>
+        <option value="externa">Externa</option>
+      </select>
+    </div> -->
+
     <div class="container">
       <ListaVendedores
-        v-if="vendedoresTele.length || vendedoresPorta.length"
+        v-if="vendedoresTele.length || vendedoresPortaFiltrados.length"
         :vendedoresTele="vendedoresTele"
-        :vendedoresPorta="vendedoresPorta"
+        :vendedoresPorta="vendedoresPortaFiltrados"
+        :filtroCategoria="filtroCategoria"
+        @update-filtro="filtroCategoria = $event"
         @selecionar-vendedor="mostrarDetalhes"
       />
 

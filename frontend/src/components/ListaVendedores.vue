@@ -22,6 +22,18 @@
   </div>
   <div class="dashboard-vendedores">
       <h2>Vendedores Porta a Porta</h2>
+
+      <label for="filtro" style="margin-right: 10px;">Filtrar:</label>
+      <select
+      id="filtro"
+      :value="props.filtroCategoria"
+      @change="emit('upadte-filtro', '$event.target.value')"
+      style="margin-bottom: 10px; padding: 5px;"
+      >
+       <option value="todos">Todos</option>
+       <option value="porta">Somente Porta a Porta</option>
+       <option value="externa">Somente Vendas Externas</option>
+      </select>
     <table>
       <thead>
         <tr>
@@ -46,7 +58,15 @@
 </template>
 
 <script setup>
-defineProps(['vendedoresTele', 'vendedoresPorta'])
+import { defineProps, defineEmits } from 'vue';
+
+const props = defineProps({
+  vendedoresTele: Array,
+  vendedoresPorta: Array,
+  filtroCategoria: String
+})
+
+const emit = defineEmits(['selecionar-vendedor', 'upadte-filtro'])
 </script>
 
 <style scoped>
