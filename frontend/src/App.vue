@@ -83,15 +83,6 @@ const vendedoresPortaFiltrados = computed(() => {
 
     <BaixarArquivo v-if="arquivoGerado" />
 
-    <!-- <div class="p-2">
-      <label for="">Filtrar Vendedores</label>
-      <select name="" id="">
-        <option value="todos">Todos</option>
-        <option value="porta">Porta</option>
-        <option value="externa">Externa</option>
-      </select>
-    </div> -->
-
     <div class="container">
       <ListaVendedores
         v-if="vendedoresTele.length || vendedoresPortaFiltrados.length"
