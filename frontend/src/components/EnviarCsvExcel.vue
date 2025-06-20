@@ -1,79 +1,68 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-    <div class="p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-md">
-      <h1 class="text-2xl font-semibold mb-6 text-center">Upload de Arquivos</h1>
+  <div class="min-h-screen bg-white text-black flex flex-col items-center justify-center px-4 py-10">
+    <h1 class="text-4xl font-bold mb-10">Enviar Arquivos</h1>
 
-      <div class="space-y-6">
-        <!-- Botão CSV -->
-        <div class="text-center">
-          <button
-            class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
-            @click="triggerCsvInput"
-          >
-            Selecionar arquivo CSV
-          </button>
-          <input
-            type="file"
-            ref="csvInput"
-            @change="onCsvSelected"
-            accept=".csv"
-            class="hidden"
-            style="display: none;"
-          />
-          <p v-if="arquivoCsv" class="text-sm text-gray-300 mt-2">{{ arquivoCsv.name }}</p>
-        </div>
+    <!-- Botões de arquivos -->
+    <div class="flex flex-wrap justify-center gap-6 mb-8">
+      <button
+        class="flex items-center justify-center gap-2 px-8 py-4 bg-gray-100 hover:bg-gray-200 text-black rounded-xl shadow-md text-lg"
+        @click="triggerCsvInput"
+      >
+        CSV
+      </button>
+      <input
+        type="file"
+        ref="csvInput"
+        @change="onCsvSelected"
+        accept=".csv"
+        class="hidden"
+      />
 
-        <!-- Botão Excel -->
-        <div class="text-center">
-          <button
-            class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
-            @click="triggerExcelInput"
-          >
-            Selecionar arquivo Excel
-          </button>
-          <input
-            type="file"
-            ref="excelInput"
-            @change="onExcelSelected"
-            accept=".xlsx,.xls"
-            class="hidden"
-            style="display: none;"
-          />
-          <p v-if="arquivoExcel" class="text-sm text-gray-300 mt-2">{{ arquivoExcel.name }}</p>
-        </div>
-
-        <!-- Botão Enviar -->
-        <div class="text-center">
-          <button
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
-            @click="enviarArquivos"
-            :disabled="!arquivoCsv || !arquivoExcel || enviando"
-          >
-            <span v-if="enviando" class="loader mr-2"></span>
-            {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
-          </button>
-        </div>
-      </div>
+      <button
+        class="flex items-center justify-center gap-2 px-8 py-4 bg-gray-100 hover:bg-gray-200 text-black rounded-xl shadow-md text-lg"
+        @click="triggerExcelInput"
+      >
+        Excel
+      </button>
+      <input
+        type="file"
+        ref="excelInput"
+        @change="onExcelSelected"
+        accept=".xlsx,.xls"
+        class="hidden"
+      />
     </div>
+
+    <!-- Nomes dos arquivos -->
+    <div class="mb-6 text-sm text-gray-600">
+      <p v-if="arquivoCsv">CSV Selecionado: {{ arquivoCsv.name }}</p>
+      <p v-if="arquivoExcel">Excel Selecionado: {{ arquivoExcel.name }}</p>
+    </div>
+
+    <!-- Botão Enviar -->
+    <button
+      v-if="arquivoCsv && arquivoExcel"
+      class="mt-4 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md text-lg"
+      @click="enviarArquivos"
+      :disabled="enviando"
+    >
+      <span v-if="enviando" class="loader mr-2"></span>
+      {{ enviando ? 'Enviando...' : 'Enviar Arquivos' }}
+    </button>
   </div>
 </template>
-
 
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
 
-// Refs para arquivos
+const emit = defineEmits(['arquivoPronto', 'vendedoresTele', 'vendedoresPorta'])
 const arquivoCsv = ref(null)
 const arquivoExcel = ref(null)
 const enviando = ref(false)
 
-// Refs para inputs
 const csvInput = ref(null)
 const excelInput = ref(null)
-
-// Emissor de eventos
-const emit = defineEmits(['arquivoPronto', 'vendedoresTele', 'vendedoresPorta'])
 
 function triggerCsvInput() {
   csvInput.value.click()
@@ -92,32 +81,24 @@ function onExcelSelected(event) {
 }
 
 async function enviarArquivos() {
-  if (!arquivoCsv.value || !arquivoExcel.value) {
-    alert('Envie ambos os arquivos antes de enviar.')
-    return
-  }
-
   enviando.value = true
-
   const formData = new FormData()
   formData.append('csv', arquivoCsv.value)
   formData.append('excel', arquivoExcel.value)
 
   try {
-    // Envia arquivos para o backend
     const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     emit('respostaRecebida', response.data)
 
-    // Busca os dados de vendedores processados
     const vendedoresRes = await axios.get('http://localhost:5000/vendedores_tele')
     emit('vendedoresTele', vendedoresRes.data)
 
     const vendedoresPorta = await axios.get('http://localhost:5000/vendedores_porta_a_porta')
     emit('vendedoresPorta', vendedoresPorta.data)
-    
+
     emit('arquivoPronto', true)
   } catch (error) {
     alert('Erro ao enviar arquivos: ' + error.message)
@@ -144,4 +125,6 @@ async function enviarArquivos() {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 </style>
+
