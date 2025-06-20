@@ -1,17 +1,19 @@
-from main import app
-from flask import request, jsonify, send_file
+from flask import request, jsonify, send_file, Blueprint, current_app as app
 from werkzeug.utils import secure_filename
 from controladores.Classes import ProcessaDados
 from controladores.comparador import comparar_e_preencher
-import pandas as pd
-import os
-from utils.limpeza import remover_colunas_denecessarias, contratos_pagos_em_abril, filtrar_mes_atual
+from utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
 from utils.macro import colar_e_executar_macro
+from utils.adicionar_clientes import adicionar_clientes_manualmente
+import os
+import pandas as pd
+import traceback
+from unidecode import unidecode
+import re
 
-# Rota que processa os dados no back end, recebe csv, recebe excel e executa macro, gerando resultado.xlsx
+views = Blueprint('views', __name__)
 
-
-@app.route('/upload', methods=['POST'])
+@views.route('/upload', methods=['POST'])
 def upload_files():
     print("Recebendo arquivos...")
 
@@ -19,89 +21,160 @@ def upload_files():
     excel_file = request.files.get('excel')
 
     if not csv_file or not excel_file:
-        print("Erro: CSV ou Excel não enviados")
         return jsonify({'error': 'Nenhum arquivo CSV ou Excel foi enviado'}), 400
 
     if csv_file.filename == '' or excel_file.filename == '':
-        print("Erro: Nome de arquivo vazio")
         return jsonify({'error': 'Nome de arquivo vazio'}), 400
 
     try:
-        csv_filename = secure_filename(csv_file.filename)
-        excel_filename = secure_filename(excel_file.filename)
+        upload_folder = app.config['UPLOAD_FOLDER']
+        os.makedirs(upload_folder, exist_ok=True)
 
-        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], csv_filename)
-        excel_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_filename)
+        csv_path = os.path.join(upload_folder, secure_filename(csv_file.filename))
+        excel_path = os.path.join(upload_folder, secure_filename(excel_file.filename))
 
-        print(f"Salvando CSV em: {csv_path}")
         csv_file.save(csv_path)
-        print(f"Salvando Excel em: {excel_path}")
         excel_file.save(excel_path)
 
         processador = ProcessaDados(csv_path, excel_path)
 
-        print("Filtrando dados do CSV pelo mês atual...")
+        # Pré-processamento
         processador.csv_df = filtrar_mes_atual(processador.csv_df)
-        print(f"CSV filtrado shape: {processador.csv_df.shape}")
-
-        print("Comparando e preenchendo dados...")
         processador = comparar_e_preencher(processador)
+        processador.excel_df = remover_colunas_desnecessarias(processador.excel_df)
+        processador.excel_df = remover_clientes_excluidos(processador.excel_df)
 
-        print("Removendo colunas desnecessárias...")
-        processador.excel_df = remover_colunas_denecessarias(
-            processador.excel_df)
-
-        print("Removendo contratos pagos em abril...")
-        processador.excel_df = contratos_pagos_em_abril(processador.excel_df)
-
+        # Executa macro
         caminho_macro = r'C:\Users\Pax Primavera\Documents\MeusProjetos\Projeto_Vendas\Macro\Macro - Troca de Data.xlsm'
+        df_macro, caminho_macro_gerado = colar_e_executar_macro(processador.excel_df, caminho_macro)
 
-        print("Executando macro...")
-        df_macro, caminho_arquivo_macro_gerado = colar_e_executar_macro(
-            processador.excel_df, caminho_macro)
-
-        print("DataFrame após macro:")
-        print(df_macro.head())
-        print(f"Shape: {df_macro.shape}")
-
+        # Salva resultado final
         processador.excel_df = df_macro
-
-        # Para simplificar, salvaremos sempre aqui:
-        caminho_resultado = os.path.join(
-            app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
-
-        print(f"Salvando arquivo final em: {caminho_resultado}")
+        caminho_resultado = os.path.join(upload_folder, 'resultado.xlsx')
         processador.salvar_excel_preenchido(caminho_resultado)
+        adicionar_clientes_manualmente(caminho_resultado)
 
-        if os.path.exists(caminho_resultado):
-            tamanho = os.path.getsize(caminho_resultado)
-            print(f"Arquivo salvo com tamanho: {tamanho} bytes")
-        else:
-            print("Erro: arquivo final não encontrado após salvar!")
+        if not os.path.exists(caminho_resultado):
+            return jsonify({'error': 'Erro ao salvar o arquivo final'}), 500
 
-        # Retorna o caminho para que o front-end saiba onde baixar
         return jsonify({'download_path': '/download'}), 200
 
     except Exception as e:
-        print(f"Erro ao processar arquivos: {e}")
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-# Rota para fazer download do arquivo Excel gerado após processamento
-
-
-@app.route('/download', methods=['GET'])
+@views.route('/download', methods=['GET'])
 def download():
-    caminho_arquivo = os.path.join(
-        app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
-
+    caminho_arquivo = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
     if os.path.exists(caminho_arquivo):
-        print(f"Enviando arquivo: {caminho_arquivo}")
         return send_file(
             caminho_arquivo,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
             download_name='resultado.xlsx'
         )
-    else:
-        print("Erro: arquivo para download não encontrado")
-        return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
+    return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
+
+@views.route('/vendedores_tele', methods=['GET'])
+def vendedores_tele():
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
+    if not os.path.exists(caminho):
+        return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
+
+    df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+    if 'DATA_CONTRATO' not in df.columns or 'VENDEDOR_TELE' not in df.columns:
+        return jsonify({'error': 'Colunas esperadas não encontradas no Excel'}), 400
+
+    df['DATA_CONTRATO'] = pd.to_datetime(df['DATA_CONTRATO'], errors='coerce')
+    df_vendedores = df.dropna(subset=['VENDEDOR_TELE']).copy()
+    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period('M').astype(str)
+
+    vendas_por_vendedor = df_vendedores.groupby(['VENDEDOR_TELE', 'MES']).size().reset_index(name='QTD_VENDAS')
+
+    resultado = []
+    for vendedor in vendas_por_vendedor['VENDEDOR_TELE'].unique():
+        vendas = vendas_por_vendedor[vendas_por_vendedor['VENDEDOR_TELE'] == vendedor]
+        resultado.append({
+            'nome': vendedor,
+            'total_vendas': int(vendas['QTD_VENDAS'].sum()),
+            'vendas_mensais': vendas[['MES', 'QTD_VENDAS']].to_dict(orient='records')
+        })
+
+    return jsonify(resultado)
+
+@views.route('/vendedor_tele/<nome>', methods=['GET'])
+def detalhes_vendedor(nome):
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
+    if not os.path.exists(caminho):
+        return jsonify([])
+
+    df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+    if 'NOME' not in df.columns or 'DATA_CONTRATO' not in df.columns or 'VENDEDOR_TELE' not in df.columns:
+        return jsonify([])
+
+    nome_normalizado = nome.strip().lower()
+    df['VENDEDOR_TELE'] = df['VENDEDOR_TELE'].fillna('').str.strip().str.lower()
+    df_vendedor = df[df['VENDEDOR_TELE'] == nome_normalizado].copy()
+
+    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+
+    # Trata datas inválidas como string vazia
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("03/06/2025")
+
+    resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
+    return jsonify(resultado.to_dict(orient='records'))
+
+@views.route('/vendedores_porta_a_porta', methods=['GET'])
+def vendedores_porta_a_porta():
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
+    if not os.path.exists(caminho):
+        return jsonify({'error': 'Arquivo resultado.xlsx não encontrado!'}), 404
+
+    df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+    if 'DATA_CONTRATO' not in df.columns or 'VENDEDOR' not in df.columns:
+        return jsonify({'error': 'Colunas esperadas não encontradas no Excel'}), 400
+
+    df['DATA_CONTRATO'] = pd.to_datetime(df['DATA_CONTRATO'], errors='coerce')
+    df_vendedores = df.dropna(subset=['VENDEDOR']).copy()
+    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period('M').astype(str)
+
+    vendas_por_vendedor = df_vendedores.groupby(['VENDEDOR', 'MES']).size().reset_index(name='QTD_VENDAS')
+
+    resultado = []
+    for vendedor in vendas_por_vendedor['VENDEDOR'].unique():
+        vendas = vendas_por_vendedor[vendas_por_vendedor['VENDEDOR'] == vendedor]
+        resultado.append({
+            'nome': vendedor,
+            'total_vendas': int(vendas['QTD_VENDAS'].sum()),
+            'vendas_mensais': vendas[['MES', 'QTD_VENDAS']].to_dict(orient='records')
+        })
+
+    return jsonify(resultado)
+
+@views.route('/vendedores_porta_a_porta/<nome>', methods=['GET'])
+def detalhes_vendedor_porta_a_porta(nome):
+    caminho = os.path.join(app.config['UPLOAD_FOLDER'], "resultado.xlsx")
+    if not os.path.exists(caminho):
+        return jsonify([])
+
+    df = pd.read_excel(caminho, dtype=str, engine='openpyxl')
+
+    if 'NOME' not in df.columns or 'DATA_CONTRATO' not in df.columns or 'VENDEDOR' not in df.columns:
+        return jsonify([])
+
+    nome_normalizado = nome.strip().lower()
+    df['VENDEDOR'] = df['VENDEDOR'].fillna('').str.strip().str.lower()
+    df_vendedor = df[df['VENDEDOR'] == nome_normalizado].copy()
+
+    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+
+    # Trata datas inválidas como string vazia
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("03/06/2025")
+
+    resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
+    return jsonify(resultado.to_dict(orient='records'))

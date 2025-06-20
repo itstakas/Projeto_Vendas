@@ -1,115 +1,147 @@
-
 <template>
-    <div class="container">
-        <h1>Upload de arquivos: </h1>
+  <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+    <div class="p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-md">
+      <h1 class="text-2xl font-semibold mb-6 text-center">Upload de Arquivos</h1>
 
-        <input type="file" ref="csvInput" accept=".csv" style="display: none;" @change="selecionarCsv"/>
-        <input type="file" ref="excelInput" accept=".xlsx, .xls" style="display: none;" @change="selecionarExcel"/>
-    
-        <button @click="abrirCsv">Enviar CSV</button>
-        <button @click="abrirExcel">Enviar EXCEL</button>
+      <div class="space-y-6">
+        <!-- Botão CSV -->
+        <div class="text-center">
+          <button
+            class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
+            @click="triggerCsvInput"
+          >
+            Selecionar arquivo CSV
+          </button>
+          <input
+            type="file"
+            ref="csvInput"
+            @change="onCsvSelected"
+            accept=".csv"
+            class="hidden"
+            style="display: none;"
+          />
+          <p v-if="arquivoCsv" class="text-sm text-gray-300 mt-2">{{ arquivoCsv.name }}</p>
+        </div>
 
-        <!-- <div>
-        <button
-        v-on:click="enviarArquivos"
-        v-bind="!arquivoCsv || !arquivoExcel || carregando"
-    >
-        {{ carregando ? 'Enviando...' : 'Enviar arquivos' }}
-    </button>
-        -->
-        
+        <!-- Botão Excel -->
+        <div class="text-center">
+          <button
+            class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
+            @click="triggerExcelInput"
+          >
+            Selecionar arquivo Excel
+          </button>
+          <input
+            type="file"
+            ref="excelInput"
+            @change="onExcelSelected"
+            accept=".xlsx,.xls"
+            class="hidden"
+            style="display: none;"
+          />
+          <p v-if="arquivoExcel" class="text-sm text-gray-300 mt-2">{{ arquivoExcel.name }}</p>
+        </div>
 
-    <input 
-        type="file"
-        ref="csvInput"
-        accept=".csv"
-        @change="selecionarCsv"
-        style="display: none;"
-    />
-
-    <input 
-        type="file"
-        ref="excelInput"
-        accept=".xlsx, .xls"
-        @change="selecionarExcel"
-        style="display: none;"
-    />
+        <!-- Botão Enviar -->
+        <div class="text-center">
+          <button
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
+            @click="enviarArquivos"
+            :disabled="!arquivoCsv || !arquivoExcel || enviando"
+          >
+            <span v-if="enviando" class="loader mr-2"></span>
+            {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
+          </button>
+        </div>
+      </div>
     </div>
-    <EnviarArquivos
-        :arquivoCsv="arquivoCsv"
-        :arquivoExcel="arquivoExcel"
-        @respostaRecebida="resposta = $event"
-        @arquivoPronto="mostrarBotaoDownload = $event"
-    />
-
-    <BaixarArquivo :visivel="mostrarBotaoDownload"/>
-
-
-    <div v-if="resposta">
-        <h2>Resposta do servidor:</h2>
-        <pre>{{ resposta }}</pre>
-    </div>
-    
+  </div>
 </template>
 
+
 <script setup>
-import BaixarArquivo from './BaixarArquivo.vue';
-import EnviarArquivos from './EnviarArquivos.vue';
-import { ref } from 'vue';
+import { ref } from 'vue'
+import axios from 'axios'
 
-const mostrarBotaoDownload = ref(false)
+// Refs para arquivos
+const arquivoCsv = ref(null)
+const arquivoExcel = ref(null)
+const enviando = ref(false)
 
+// Refs para inputs
 const csvInput = ref(null)
 const excelInput = ref(null)
 
-const arquivoCsv = ref(null)
-const arquivoExcel = ref(null)
+// Emissor de eventos
+const emit = defineEmits(['arquivoPronto', 'vendedoresTele', 'vendedoresPorta'])
 
-const resposta = ref(null)
-
-const abrirCsv = () => csvInput.value.click()
-const abrirExcel = () => excelInput.value.click()
-
-const selecionarCsv = (event) => {
-    const file = event.target.files[0]
-    if (file && file.name.endsWith('.csv')){
-        arquivoCsv.value = file
-    } else {
-        alert('Arquivo CSV invalido')
-        arquivoCsv.value = null
-    }
+function triggerCsvInput() {
+  csvInput.value.click()
 }
 
-const selecionarExcel = (event) => {
-    const file = event.target.files[0]
-    if(file && /\.(xls|xlsx)$/i.test(file.name)) {
-        arquivoExcel.value = file
-    } else {
-        alert('Arquivo Excel inválido')
-        arquivoExcel.value = null
-    }
+function triggerExcelInput() {
+  excelInput.value.click()
 }
 
+function onCsvSelected(event) {
+  arquivoCsv.value = event.target.files[0]
+}
+
+function onExcelSelected(event) {
+  arquivoExcel.value = event.target.files[0]
+}
+
+async function enviarArquivos() {
+  if (!arquivoCsv.value || !arquivoExcel.value) {
+    alert('Envie ambos os arquivos antes de enviar.')
+    return
+  }
+
+  enviando.value = true
+
+  const formData = new FormData()
+  formData.append('csv', arquivoCsv.value)
+  formData.append('excel', arquivoExcel.value)
+
+  try {
+    // Envia arquivos para o backend
+    const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    emit('respostaRecebida', response.data)
+
+    // Busca os dados de vendedores processados
+    const vendedoresRes = await axios.get('http://localhost:5000/vendedores_tele')
+    emit('vendedoresTele', vendedoresRes.data)
+
+    const vendedoresPorta = await axios.get('http://localhost:5000/vendedores_porta_a_porta')
+    emit('vendedoresPorta', vendedoresPorta.data)
+    
+    emit('arquivoPronto', true)
+  } catch (error) {
+    alert('Erro ao enviar arquivos: ' + error.message)
+    emit('respostaRecebida', { error: error.message })
+  } finally {
+    enviando.value = false
+  }
+}
 </script>
 
 <style scoped>
-.progress-bar {
-  height: 20px;
-  width: 100%;
-  background: linear-gradient(90deg, #3498db 0%, #85c1e9 50%, #3498db 100%);
-  background-size: 200% 100%;
-  animation: carregando 1s linear infinite;
-  border-radius: 4px;
-  margin-bottom: 15px; 
+.loader {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
 }
 
-@keyframes carregando {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
-
 </style>

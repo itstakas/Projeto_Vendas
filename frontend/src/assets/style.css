@@ -179,7 +179,7 @@ h1 {
 
 button {
     -webkit-text-size-adjust: 100%;
-    margin-bottom: 30px;
+    margin-top: 50px;
     --vt-c-white: #ffffff;
     --vt-c-white-soft: #f9f9f9;
     --vt-c-white-mute: #f1f1f1;
@@ -347,6 +347,10 @@ button:hover{
   background-color: rgb(126, 126, 126);
 }
 
-/* h2{
-  display: none;
-} */
+.botoes-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
