@@ -27,7 +27,7 @@
       <select
       id="filtro"
       :value="props.filtroCategoria"
-      @change="emit('upadte-filtro', '$event.target.value')"
+      @change="emit('update-filtro', $event.target.value)"
       style="margin-bottom: 10px; padding: 5px;"
       >
        <option value="todos">Todos</option>

@@ -1,53 +1,63 @@
 <template>
-  <div class="p-4 bg-white rounded shadow-md w-full max-w-md mx-auto">
-    <h1 class="text-2xl font-semibold mb-4 text-center">Upload de Arquivos</h1>
+  <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+    <div class="p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-md">
+      <h1 class="text-2xl font-semibold mb-6 text-center">Upload de Arquivos</h1>
 
-    <div class="space-y-4">
-      <div>
-        <button
-          class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
-          @click="triggerCsvInput"
-        >
-          Selecionar arquivo CSV
-        </button>
-        <input
-          type="file"
-          ref="csvInput"
-          @change="onCsvSelected"
-          accept=".csv"
-          style="display: none"
-        />
-        <p v-if="arquivoCsv" class="text-sm text-gray-600 mt-1">{{ arquivoCsv.name }}</p>
+      <div class="space-y-6">
+        <!-- Botão CSV -->
+        <div class="text-center">
+          <button
+            class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
+            @click="triggerCsvInput"
+          >
+            Selecionar arquivo CSV
+          </button>
+          <input
+            type="file"
+            ref="csvInput"
+            @change="onCsvSelected"
+            accept=".csv"
+            class="hidden"
+            style="display: none;"
+          />
+          <p v-if="arquivoCsv" class="text-sm text-gray-300 mt-2">{{ arquivoCsv.name }}</p>
+        </div>
+
+        <!-- Botão Excel -->
+        <div class="text-center">
+          <button
+            class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
+            @click="triggerExcelInput"
+          >
+            Selecionar arquivo Excel
+          </button>
+          <input
+            type="file"
+            ref="excelInput"
+            @change="onExcelSelected"
+            accept=".xlsx,.xls"
+            class="hidden"
+            style="display: none;"
+          />
+          <p v-if="arquivoExcel" class="text-sm text-gray-300 mt-2">{{ arquivoExcel.name }}</p>
+        </div>
+
+        <!-- Botão Enviar -->
+        <div class="text-center">
+          <button
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
+            @click="enviarArquivos"
+            :disabled="!arquivoCsv || !arquivoExcel || enviando"
+          >
+            <span v-if="enviando" class="loader mr-2"></span>
+            {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
+          </button>
+        </div>
       </div>
-
-      <div>
-        <button
-          class="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-2 px-4 rounded"
-          @click="triggerExcelInput"
-        >
-          Selecionar arquivo Excel
-        </button>
-        <input
-          type="file"
-          ref="excelInput"
-          @change="onExcelSelected"
-          accept=".xlsx,.xls"
-          style="display: none"
-        />
-        <p v-if="arquivoExcel" class="text-sm text-gray-600 mt-1">{{ arquivoExcel.name }}</p>
-      </div>
-
-      <button
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
-        @click="enviarArquivos"
-        :disabled="!arquivoCsv || !arquivoExcel || enviando"
-      >
-        <span v-if="enviando" class="loader mr-2"></span>
-        {{ enviando ? 'Enviando...' : 'Enviar arquivos' }}
-      </button>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'
