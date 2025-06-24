@@ -12,7 +12,7 @@ import shutil
 def colar_e_executar_macro(df, caminho_macro):
     pythoncom.CoInitialize()
     temp_dir = tempfile.gettempdir()
-    caminho_saida = os.path.join(temp_dir, 'resultado.xlsx')    
+    caminho_saida = os.path.join(temp_dir, 'resultado.xlsx')
     temp_macro_path = os.path.join(temp_dir, 'temp_macro.xlsm')
 
     excel = None
@@ -23,17 +23,20 @@ def colar_e_executar_macro(df, caminho_macro):
         shutil.copy(caminho_macro, temp_macro_path)
 
         excel = win32.gencache.EnsureDispatch('Excel.Application')
-        excel.Visible = False
-        excel.DisplayAlerts = False
+        excel.Visible = False  # <--- CERTIFIQUE-SE QUE ESTA LINHA ESTÁ PRESENTE E É 'False'
+        excel.DisplayAlerts = False  # Desativa alertas do Excel
 
         wb = excel.Workbooks.Open(temp_macro_path)
         ws = wb.Sheets('Vendas')
 
         # Limpa a planilha antiga
-        ultima_coluna = ws.Cells(1, ws.Columns.Count).End(-4159).Column  # -4159 = xlToLeft
-        ultima_linha = ws.Cells(ws.Rows.Count, 1).End(-4162).Row         # -4162 = xlUp
+        ultima_coluna = ws.Cells(
+            1, ws.Columns.Count).End(-4159).Column  # -4159 = xlToLeft
+        ultima_linha = ws.Cells(
+            ws.Rows.Count, 1).End(-4162).Row         # -4162 = xlUp
         if ultima_linha > 1 and ultima_coluna > 1:
-            ws.Range(ws.Cells(2, 1), ws.Cells(ultima_linha, ultima_coluna)).ClearContents()
+            ws.Range(ws.Cells(2, 1), ws.Cells(
+                ultima_linha, ultima_coluna)).ClearContents()
 
         # Escreve os dados do DataFrame no Excel
         for i, col in enumerate(df.columns):
@@ -65,9 +68,10 @@ def colar_e_executar_macro(df, caminho_macro):
         df_resultante = pd.DataFrame()
     finally:
         if wb:
+            # Fecha a pasta de trabalho sem salvar alterações nela
             wb.Close(SaveChanges=False)
         if excel:
-            excel.Quit()
+            excel.Quit()  # Garante que a aplicação Excel seja fechada
         pythoncom.CoUninitialize()
         gc.collect()
 
