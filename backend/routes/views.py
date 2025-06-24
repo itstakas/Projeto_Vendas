@@ -10,8 +10,10 @@ import pandas as pd
 import traceback
 from unidecode import unidecode
 import re
+import sys
 
 views = Blueprint('views', __name__)
+
 
 @views.route('/upload', methods=['POST'])
 def upload_files():
@@ -27,26 +29,53 @@ def upload_files():
         return jsonify({'error': 'Nome de arquivo vazio'}), 400
 
     try:
-        upload_folder = app.config['UPLOAD_FOLDER']
-        os.makedirs(upload_folder, exist_ok=True)
+        # Define o caminho base para encontrar arquivos empacotados pelo PyInstaller
+        if getattr(sys, 'frozen', False):  # Verifica se está rodando como executável PyInstaller
+            # sys._MEIPASS é o diretório temporário onde os arquivos são extraídos
+            application_path = sys._MEIPASS
+        else:
+            application_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(
+                __file__)), '..'))  # Caminho normal em ambiente de desenvolvimento
 
-        csv_path = os.path.join(upload_folder, secure_filename(csv_file.filename))
-        excel_path = os.path.join(upload_folder, secure_filename(excel_file.filename))
+        # Certifique-se de que o UPLOAD_FOLDER seja sempre um diretório gravável, mesmo empacotado.
+        # Geralmente, em apps empacotados, você usaria app.config['TEMP_FOLDER'] ou um tempfile real
+        # ou um diretório de documentos do usuário. Por simplicidade para 1 usuário:
+        # Vamos manter o UPLOAD_FOLDER relativo ao app, ou definir um fixo se for o caso.
+        # Para um executável, uma pasta 'uploads' ao lado do .exe é comum.
+        upload_folder = os.path.join(os.path.dirname(
+            os.path.abspath(sys.argv[0])), 'uploads_app')
+        os.makedirs(upload_folder, exist_ok=True)
+        # Atualiza a configuração do Flask para o caminho correto
+        app.config['UPLOAD_FOLDER'] = upload_folder
+
+        csv_path = os.path.join(
+            upload_folder, secure_filename(csv_file.filename))
+        excel_path = os.path.join(
+            upload_folder, secure_filename(excel_file.filename))
 
         csv_file.save(csv_path)
         excel_file.save(excel_path)
 
         processador = ProcessaDados(csv_path, excel_path)
 
+        # PRÓXIMO PASSO: DEFINIR O CAMINHO DA MACRO DE FORMA RELATIVA
+        # Assumindo que 'Macro - Troca de Data.xlsm' foi copiada para a pasta 'backend'
+        # e será incluída na raiz do executável pelo --add-data "Macro - Troca de Data.xlsm;."
+        caminho_macro = os.path.join(
+            application_path, 'Macro - Troca de Data.xlsm')
+        # print(f"Caminho da Macro: {caminho_macro}") # Descomente para depurar
+
         # Pré-processamento
         processador.csv_df = filtrar_mes_atual(processador.csv_df)
         processador = comparar_e_preencher(processador)
-        processador.excel_df = remover_colunas_desnecessarias(processador.excel_df)
+        processador.excel_df = remover_colunas_desnecessarias(
+            processador.excel_df)
         processador.excel_df = remover_clientes_excluidos(processador.excel_df)
 
         # Executa macro
-        caminho_macro = r'C:\Users\Pax Primavera\Documents\MeusProjetos\Projeto_Vendas\Macro\Macro - Troca de Data.xlsm'
-        df_macro, caminho_macro_gerado = colar_e_executar_macro(processador.excel_df, caminho_macro)
+        # O caminho_macro agora é dinâmico para ambiente de desenvolvimento ou empacotado
+        df_macro, caminho_macro_gerado = colar_e_executar_macro(
+            processador.excel_df, caminho_macro)
 
         # Salva resultado final
         processador.excel_df = df_macro
@@ -63,9 +92,11 @@ def upload_files():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
 @views.route('/download', methods=['GET'])
 def download():
-    caminho_arquivo = os.path.join(app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
+    caminho_arquivo = os.path.join(
+        app.config['UPLOAD_FOLDER'], 'resultado.xlsx')
     if os.path.exists(caminho_arquivo):
         return send_file(
             caminho_arquivo,
@@ -74,6 +105,7 @@ def download():
             download_name='resultado.xlsx'
         )
     return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
+
 
 @views.route('/vendedores_tele', methods=['GET'])
 def vendedores_tele():
@@ -88,9 +120,11 @@ def vendedores_tele():
 
     df['DATA_CONTRATO'] = pd.to_datetime(df['DATA_CONTRATO'], errors='coerce')
     df_vendedores = df.dropna(subset=['VENDEDOR_TELE']).copy()
-    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period('M').astype(str)
+    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period(
+        'M').astype(str)
 
-    vendas_por_vendedor = df_vendedores.groupby(['VENDEDOR_TELE', 'MES']).size().reset_index(name='QTD_VENDAS')
+    vendas_por_vendedor = df_vendedores.groupby(
+        ['VENDEDOR_TELE', 'MES']).size().reset_index(name='QTD_VENDAS')
 
     resultado = []
     for vendedor in vendas_por_vendedor['VENDEDOR_TELE'].unique():
@@ -102,6 +136,7 @@ def vendedores_tele():
         })
 
     return jsonify(resultado)
+
 
 @views.route('/vendedor_tele/<nome>', methods=['GET'])
 def detalhes_vendedor(nome):
@@ -115,17 +150,22 @@ def detalhes_vendedor(nome):
         return jsonify([])
 
     nome_normalizado = nome.strip().lower()
-    df['VENDEDOR_TELE'] = df['VENDEDOR_TELE'].fillna('').str.strip().str.lower()
+    df['VENDEDOR_TELE'] = df['VENDEDOR_TELE'].fillna(
+        '').str.strip().str.lower()
     df_vendedor = df[df['VENDEDOR_TELE'] == nome_normalizado].copy()
 
-    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(
+        df_vendedor['DATA_CONTRATO'], errors='coerce')
 
     # Trata datas inválidas como string vazia
-    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
-    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("03/06/2025")
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime(
+        '%d/%m/%Y')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna(
+        "03/06/2025")
 
     resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
     return jsonify(resultado.to_dict(orient='records'))
+
 
 @views.route('/vendedores_porta_a_porta', methods=['GET'])
 def vendedores_porta_a_porta():
@@ -140,9 +180,11 @@ def vendedores_porta_a_porta():
 
     df['DATA_CONTRATO'] = pd.to_datetime(df['DATA_CONTRATO'], errors='coerce')
     df_vendedores = df.dropna(subset=['VENDEDOR']).copy()
-    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period('M').astype(str)
+    df_vendedores['MES'] = df_vendedores['DATA_CONTRATO'].dt.to_period(
+        'M').astype(str)
 
-    vendas_por_vendedor = df_vendedores.groupby(['VENDEDOR', 'MES']).size().reset_index(name='QTD_VENDAS')
+    vendas_por_vendedor = df_vendedores.groupby(
+        ['VENDEDOR', 'MES']).size().reset_index(name='QTD_VENDAS')
 
     resultado = []
     for vendedor in vendas_por_vendedor['VENDEDOR'].unique():
@@ -154,6 +196,7 @@ def vendedores_porta_a_porta():
         })
 
     return jsonify(resultado)
+
 
 @views.route('/vendedores_porta_a_porta/<nome>', methods=['GET'])
 def detalhes_vendedor_porta_a_porta(nome):
@@ -170,11 +213,14 @@ def detalhes_vendedor_porta_a_porta(nome):
     df['VENDEDOR'] = df['VENDEDOR'].fillna('').str.strip().str.lower()
     df_vendedor = df[df['VENDEDOR'] == nome_normalizado].copy()
 
-    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(df_vendedor['DATA_CONTRATO'], errors='coerce')
+    df_vendedor['DATA_CONTRATO'] = pd.to_datetime(
+        df_vendedor['DATA_CONTRATO'], errors='coerce')
 
     # Trata datas inválidas como string vazia
-    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y')
-    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna("03/06/2025")
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime(
+        '%d/%m/%Y')
+    df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].fillna(
+        "03/06/2025")
 
     resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
     return jsonify(resultado.to_dict(orient='records'))
