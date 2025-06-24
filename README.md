@@ -28,11 +28,9 @@ Siga os passos abaixo, executando os comandos no seu terminal (Prompt de Comando
 Primeiro, clone o projeto para sua máquina local:
 
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
-cd <nome-da-pasta-do-seu-projeto>
+git clone https://github.com/itstakas/Projeto_Vendas.git
+cd PROJETO-VENDAS
 ````
-
-(Substitua `<URL_DO_SEU_REPOSITORIO>` pela URL real do seu repositório Git, e `<nome-da-pasta-do-seu-projeto>` pelo nome da pasta que será criada).
 
 #### 2\. Configurar o Backend (Python)
 
@@ -40,21 +38,8 @@ Navegue até o diretório do backend:
 
 ```bash
 cd backend
-```
 
-**a. Criar e Ativar Ambiente Virtual (Recomendado)**
-
-É uma boa prática isolar as dependências do Python em um ambiente virtual:
-
-```bash
-python -m venv venv
-# No Windows:
-.\venv\Scripts\activate
-# No macOS/Linux:
-# source venv/bin/activate
-```
-
-**b. Instalar Dependências do Python**
+**a. Instalar Dependências do Python**
 
 Com o ambiente virtual ativado, instale as bibliotecas Python necessárias:
 
@@ -64,11 +49,11 @@ pip install -r requirements.txt
 
 > **Nota:** Se você não tiver o arquivo `requirements.txt` ainda, você precisará criá-lo no seu ambiente de desenvolvimento original usando `pip freeze > requirements.txt` na pasta `backend` **com seu ambiente virtual ativado**.
 
-**c. Preparar Arquivos Essenciais**
+**b. Preparar Arquivos Essenciais**
 
   * **Copiar a Macro:** Copie o arquivo da macro `Macro - Troca de Data.xlsm` para a pasta `backend` (junto com `main.py`).
 
-**d. Configurar o Caminho da Macro (Atenção\!)**
+**c. Configurar o Caminho da Macro (Atenção\!)**
 
 Este projeto utiliza uma macro VBA em Excel. Você precisará ajustar o caminho no código do backend:
 
