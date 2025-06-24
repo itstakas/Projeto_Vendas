@@ -1,7 +1,19 @@
-.botoes-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 30px;
+/* frontend/src/assets/style.css */
+
+/* Reset básico para garantir consistência */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
+
+body {
+  background-color: #f2f4f7; /* Fundo cinza claro para toda a aplicação */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte limpa e moderna */
+  color: #1f2937; /* Cor de texto padrão para o corpo */
+  line-height: 1.5; /* Altura de linha para melhor leitura */
+  -webkit-font-smoothing: antialiased; /* Suavização de fonte para Webkit */
+  -moz-osx-font-smoothing: grayscale; /* Suavização de fonte para Firefox */
+}
+
+/* Você pode adicionar mais estilos globais aqui, se necessário */

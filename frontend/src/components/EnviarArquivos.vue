@@ -1,13 +1,16 @@
 <template>
+  <div class="enviar-container">
     <button
-        v-on:click="enviarArquivos"
-        :disabled="!arquivoCsv || !arquivoExcel || carregando"
+      @click="enviarArquivos"
+      :disabled="!arquivoCsv || !arquivoExcel || carregando"
+      class="btn-enviar"
     >
-        <span v-if="carregando" class="loader"></span>
-       <!-- // <span v-if="carregando" classe="progress-bar"></span> -->
-        {{ carregando ? 'Enviando...' : 'Enviar arquivos' }}
+      <span v-if="carregando" class="loader"></span>
+      {{ carregando ? 'Enviando...' : '📤 Enviar arquivos' }}
     </button>
+  </div>
 </template>
+
 
 <script setup>
 import axios from 'axios'
@@ -64,26 +67,48 @@ const enviarArquivos = async()=>{
 </script>
 
 <style scoped>
-button{
-    position: relative;
-    padding: 0.5rem 1rem;
-    font-weight: bold;
-}
-.loader{
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #3498db;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-    margin-right: 8px;
-    vertical-align: middle;
+.enviar-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
 }
 
-@keyframes spin{
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.btn-enviar {
+  background-color: #10b981;
+  color: white;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.btn-enviar:hover {
+  background-color: #059669;
+}
+
+.btn-enviar:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.loader {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 </style>
