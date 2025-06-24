@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import './assets/style.css' // Importa o CSS principal
 import EnviarCsvExcel from './components/EnviarCsvExcel.vue'
 import ListaVendedores from './components/ListaVendedores.vue'
 import DetalhesVendedor from './components/DetalhesVendedor.vue'
@@ -44,6 +45,7 @@ async function mostrarDetalhes(vendedor) {
   }
 }
 
+// Estes arrays poderiam vir de uma API no futuro para maior flexibilidade
 const nomesPortaPorta = [
   "GLEICI IDALINA PEREIRA RUIZ",
   "VEND.SILAS DE OLIVEIRA",
@@ -74,37 +76,70 @@ const vendedoresPortaFiltrados = computed(() => {
 </script>
 
 <template>
-  <div>
-    <EnviarCsvExcel
-      @vendedoresTele="receberTele"
-      @vendedoresPorta="receberPorta"
-      @arquivoPronto="arquivoGerado = true"
-    />
-
-    <BaixarArquivo v-if="arquivoGerado" />
-
-    <div class="container">
-      <ListaVendedores
-        v-if="vendedoresTele.length || vendedoresPortaFiltrados.length"
-        :vendedoresTele="vendedoresTele"
-        :vendedoresPorta="vendedoresPortaFiltrados"
-        :filtroCategoria="filtroCategoria"
-        @update-filtro="filtroCategoria = $event"
-        @selecionar-vendedor="mostrarDetalhes"
+  <main class="app-main">
+    <div class="app-container-wrapper">
+      <EnviarCsvExcel
+        @vendedoresTele="receberTele"
+        @vendedoresPorta="receberPorta"
+        @arquivoPronto="arquivoGerado = true"
       />
 
-      <DetalhesVendedor
-        v-if="vendedorSelecionado"
-        :vendedor="vendedorSelecionado"
-      />
+      <BaixarArquivo v-if="arquivoGerado" class="download-section" />
+
+      <div class="data-display-area">
+        <ListaVendedores
+          v-if="vendedoresTele.length || vendedoresPortaFiltrados.length"
+          :vendedoresTele="vendedoresTele"
+          :vendedoresPorta="vendedoresPortaFiltrados"
+          :filtroCategoria="filtroCategoria"
+          @update-filtro="filtroCategoria = $event"
+          @selecionar-vendedor="mostrarDetalhes"
+        />
+
+        <DetalhesVendedor
+          v-if="vendedorSelecionado"
+          :vendedor="vendedorSelecionado"
+        />
+      </div>
     </div>
-  </div>
+  </main>
 </template>
 
-<style scoped>
-.container {
+<style>
+/* Estilos globais (não scoped) ou de layout principal */
+.app-main {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background-color: #f2f4f7;
+  display: flex;
+  justify-content: center; /* Centraliza horizontalmente */
+  align-items: flex-start; /* Alinha ao topo verticalmente */
+}
+
+.app-container-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1200px; /* Limita a largura máxima do conteúdo */
+  width: 100%;
+  padding: 0 1rem; /* Padding horizontal para telas menores */
+}
+
+.download-section {
+  margin-top: 2rem;
+}
+
+.data-display-area {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .data-display-area {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 </style>
