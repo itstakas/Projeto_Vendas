@@ -1,3 +1,12 @@
+# Importa tudo que a gente precisa:
+# - 'views' é pra criar a rota (o "endereço" da página)
+# - 'request' pra pegar os arquivos que o usuário envia
+# - 'jsonify' pra mandar respostas em formato JSON (que o navegador entende)
+# - 'os' e 'sys' pra mexer com pastas e caminhos de arquivos
+# - 'secure_filename' pra deixar os nomes dos arquivos mais seguros
+# - 'traceback' pra mostrar erros detalhados pra gente no terminal
+# - E as nossas próprias funções que fazem o trabalho pesado
+
 from flask import request, jsonify, send_file, Blueprint, current_app as app
 from werkzeug.utils import secure_filename
 from controladores.Classes import ProcessaDados
@@ -5,6 +14,7 @@ from controladores.comparador import comparar_e_preencher
 from utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
 from utils.macro import colar_e_executar_macro
 from utils.adicionar_clientes import adicionar_clientes_manualmente
+from excel_processador import localizar_e_substituir_celulas
 import os
 import pandas as pd
 import traceback
@@ -19,68 +29,61 @@ views = Blueprint('views', __name__)
 def upload_files():
     print("Recebendo arquivos...")
 
+    # Pega o arquivo 'csv' e o 'excel' que o usuário enviou pelo site
     csv_file = request.files.get('csv')
     excel_file = request.files.get('excel')
 
+    # Checa se os arquivos realmente vieram. Se não, manda um erro.
     if not csv_file or not excel_file:
         return jsonify({'error': 'Nenhum arquivo CSV ou Excel foi enviado'}), 400
 
+    # Checa se os arquivos não têm nome vazio.
     if csv_file.filename == '' or excel_file.filename == '':
         return jsonify({'error': 'Nome de arquivo vazio'}), 400
 
     try:
-        # Define o caminho base para encontrar arquivos empacotados pelo PyInstaller
-        if getattr(sys, 'frozen', False):  # Verifica se está rodando como executável PyInstaller
-            # sys._MEIPASS é o diretório temporário onde os arquivos são extraídos
+        # Descobre onde o nosso programa está rodando. Isso é importante pra achar os arquivos.
+        if getattr(sys, 'frozen', False):
+            # Se for um programa .exe (depois que a gente "empacota" com PyInstaller)
             application_path = sys._MEIPASS
         else:
-            application_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(
-                __file__)), '..'))  # Caminho normal em ambiente de desenvolvimento
+            # Se a gente estiver rodando o script Python normalmente (no desenvolvimento)
+            application_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-        # Certifique-se de que o UPLOAD_FOLDER seja sempre um diretório gravável, mesmo empacotado.
-        # Geralmente, em apps empacotados, você usaria app.config['TEMP_FOLDER'] ou um tempfile real
-        # ou um diretório de documentos do usuário. Por simplicidade para 1 usuário:
-        # Vamos manter o UPLOAD_FOLDER relativo ao app, ou definir um fixo se for o caso.
-        # Para um executável, uma pasta 'uploads' ao lado do .exe é comum.
-        upload_folder = os.path.join(os.path.dirname(
-            os.path.abspath(sys.argv[0])), 'uploads_app')
+        # Define o nome da pasta onde vamos salvar os uploads e os resultados
+        upload_folder = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'uploads_app')
+        # Cria essa pasta, caso ela ainda não exista
         os.makedirs(upload_folder, exist_ok=True)
-        # Atualiza a configuração do Flask para o caminho correto
+        # Guarda o caminho dessa pasta nas configurações do app
         app.config['UPLOAD_FOLDER'] = upload_folder
 
-        csv_path = os.path.join(
-            upload_folder, secure_filename(csv_file.filename))
-        excel_path = os.path.join(
-            upload_folder, secure_filename(excel_file.filename))
+        # Define o caminho completo e o nome seguro para os arquivos que o usuário enviou
+        csv_path = os.path.join(upload_folder, secure_filename(csv_file.filename))
+        excel_path = os.path.join(upload_folder, secure_filename(excel_file.filename))
 
+        # Salva os arquivos do usuário nessa pasta
         csv_file.save(csv_path)
         excel_file.save(excel_path)
 
+        # Cria nosso "ajudante" (o ProcessaDados) que vai carregar e organizar os dados pra gente
         processador = ProcessaDados(csv_path, excel_path)
 
-        # PRÓXIMO PASSO: DEFINIR O CAMINHO DA MACRO DE FORMA RELATIVA
-        # Assumindo que 'Macro - Troca de Data.xlsm' foi copiada para a pasta 'backend'
-        # e será incluída na raiz do executável pelo --add-data "Macro - Troca de Data.xlsm;."
-        caminho_macro = os.path.join(
-            application_path, 'Macro - Troca de Data.xlsm')
-        # print(f"Caminho da Macro: {caminho_macro}") # Descomente para depurar
+        # Define onde está o nosso arquivo de "regras" (o antigo arquivo da macro)
+        caminho_macro = os.path.join(application_path, 'Macro - Troca de Data.xlsm')
 
-        # Pré-processamento
+        # Aqui a gente aplica todas as nossas regras de negócio na planilha
         processador.csv_df = filtrar_mes_atual(processador.csv_df)
         processador = comparar_e_preencher(processador)
-        processador.excel_df = remover_colunas_desnecessarias(
-            processador.excel_df)
+        processador.excel_df = remover_colunas_desnecessarias(processador.excel_df)
         processador.excel_df = remover_clientes_excluidos(processador.excel_df)
 
-        # Executa macro
-        # O caminho_macro agora é dinâmico para ambiente de desenvolvimento ou empacotado
-        df_macro, caminho_macro_gerado = colar_e_executar_macro(
-            processador.excel_df, caminho_macro)
-
-        # Salva resultado final
-        processador.excel_df = df_macro
+        # Define o nome e o caminho do nosso arquivo final
         caminho_resultado = os.path.join(upload_folder, 'resultado.xlsx')
+        # Salva a planilha, já com os dados preparados, no arquivo 'resultado.xlsx'
         processador.salvar_excel_preenchido(caminho_resultado)
+
+        localizar_e_substituir_celulas(caminho_resultado, caminho_macro)
+
         adicionar_clientes_manualmente(caminho_resultado)
 
         if not os.path.exists(caminho_resultado):

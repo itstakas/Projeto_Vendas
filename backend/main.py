@@ -1,66 +1,56 @@
-# backend/main.py
-
 from routes.views import views
 from flask import Flask
+# O "porteiro" que deixa o site conversar com o servidor
 from flask_cors import CORS
 import os
+# Ferramentas para interagir com o sistema (útil para o .exe)
 import sys
-import webbrowser
-import time  # Adicione para a pausa
+import webbrowser                   # Ferramenta para abrir o navegador
+import time                         # Ferramenta para dar pausas (esperar)
 
-# --- INÍCIO: AJUSTES DE PATH CRUCIAIS PARA IMPORTAÇÕES E PYINSTALLER ---
-current_script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root_path = os.path.abspath(os.path.join(current_script_dir, '..'))
 
-if project_root_path not in sys.path:
-    sys.path.append(project_root_path)
-
-if current_script_dir not in sys.path:
-    sys.path.append(current_script_dir)
-# --- FIM: AJUSTES DE PATH CRUCIAIS ---
-
-# --- NOVO AJUSTE: CAMINHO DA PASTA ESTÁTICA PARA O FLASK ---
-# Define o caminho para a pasta 'dist' do frontend construído,
-# adaptando para ambiente de desenvolvimento ou executável PyInstaller.
-if getattr(sys, 'frozen', False):  # Se estiver rodando como executável PyInstaller
-    # Quando empacotado, 'frontend/dist' é o subdiretório dentro do sys._MEIPASS (o diretório temporário)
-    FRONTEND_DIST_PATH = os.path.join(sys._MEIPASS, 'frontend', 'dist')
+if getattr(sys, 'frozen', False):
+    application_path = sys._MEIPASS
+    # o site (frontend) vai estar DENTRO dessa pasta temporária.
+    FRONTEND_DIST_PATH = os.path.join(application_path, 'frontend', 'dist')
 else:
-    # Em ambiente de desenvolvimento, o caminho é relativo à raiz do projeto
-    FRONTEND_DIST_PATH = os.path.join(project_root_path, 'frontend', 'dist')
-# --- FIM NOVO AJUSTE ---
+    # o "endereço da garagem" (__file__) para se localizar.
+    application_path = os.path.dirname(os.path.abspath(__file__))
+    # E para achar o site, ele volta um nível ('..') e entra na pasta 'frontend/dist'.
+    FRONTEND_DIST_PATH = os.path.join(
+        application_path, '..', 'frontend', 'dist')
 
 
-# Inicializa a aplicação Flask.
+project_root = os.path.abspath(os.path.join(application_path, '..'))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+
 app = Flask(__name__,
+            # A parte visual do site (HTML, CSS) está NESTA pasta.
             static_folder=FRONTEND_DIST_PATH,
+            # Quando alguém acessar o site, a URL principal ('/') corresponde a essa pasta.
             static_url_path='/')
 
+# Liga o CORS, permitindo que o frontend e o backend conversem.
 CORS(app)
-
 
 app.register_blueprint(views)
 
 
 @app.route('/')
 def serve_index():
-    # Flask automaticamente procura por index.html no static_folder
-    # e o serve para static_url_path='/'
+    # entrega a "porta de entrada" do site, o arquivo index.html.
     return app.send_static_file('index.html')
 
 
+# Este bloco só roda quando executa este arquivo 'main.py' diretamente.
 if __name__ == "__main__":
     url = "http://127.0.0.1:5000"
+    print(f"Servidor Flask tentando iniciar em {url}. Aguardando 3 segundos para abrir o navegador...")
+    time.sleep(3)
 
-    # Inicia o Flask em uma thread separada ou com Waitress para não bloquear o navegador.
-    # Para um único executável e PyInstaller, o mais simples é dar uma pequena pausa.
-    # O Flask com debug=True já possui um reloader que pode causar problemas se não houver delay.
-    # Vamos aumentar a pausa para garantir que o Flask esteja de pé.
-    print(
-        f"Servidor Flask tentando iniciar em {url}. Aguardando 3 segundos para abrir o navegador...")
-    time.sleep(3)  # Aumentar a pausa
-
+    # Abre o site automaticamente
     webbrowser.open_new(url)
 
-    # O app.run com debug=True já gerencia o servidor.
     app.run(debug=False, host='127.0.0.1', port=5000)
