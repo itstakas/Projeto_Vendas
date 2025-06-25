@@ -2,7 +2,8 @@ from openpyxl import load_workbook
 from datetime import datetime
 import os
 
-def adicionar_clientes_manualmente(caminho_arquivo: str):   
+
+def adicionar_clientes_manualmente(caminho_arquivo: str):
 
     if not os.path.exists(caminho_arquivo):
         print(f"Arquivo não encontrado")
@@ -12,8 +13,10 @@ def adicionar_clientes_manualmente(caminho_arquivo: str):
     ws = wb.active
 
     novos_clientes = [
-        {"NOME": "NAIANNNY GUERRIERI", "VENDEDOR_TELE": "Lucas Dos Santos Delgado", "DATA_CONTRATO": "06/06/2025"},#datetime.now().strftime('%d/%m/%Y')
-        {"NOME": "LUIZ HENRIQUE AGUIAR", "VENDEDOR_TELE": "Sheila Licia Nascimento Silva", "DATA_CONTRATO": "06/06/2025"}#datetime.now().strftime('%d/%m/%Y')
+        {"NOME": "NAIANNNY GUERRIERI", "VENDEDOR_TELE": "Lucas Dos Santos Delgado",
+            "DATA_CONTRATO": "06/06/2025"},  # datetime.now().strftime('%d/%m/%Y')
+        {"NOME": "LUIZ HENRIQUE AGUIAR", "VENDEDOR_TELE": "Sheila Licia Nascimento Silva",
+            "DATA_CONTRATO": "06/06/2025"}  # datetime.now().strftime('%d/%m/%Y')
     ]
 
     headers = {cell.value: idx for idx, cell in enumerate(ws[1])}
@@ -24,7 +27,7 @@ def adicionar_clientes_manualmente(caminho_arquivo: str):
     if nome_col is None or vendedor_col is None or data_col is None:
         print("Colunas não encontradas")
         return
-    
+
     for cliente in novos_clientes:
         nova_linha = [""] * len(headers)
         nova_linha[nome_col] = cliente["NOME"]
