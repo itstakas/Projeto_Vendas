@@ -32,7 +32,6 @@ app = Flask(__name__,
             # Quando alguém acessar o site, a URL principal ('/') corresponde a essa pasta.
             static_url_path='/')
 
-# Liga o CORS, permitindo que o frontend e o backend conversem.
 CORS(app)
 
 app.register_blueprint(views)
