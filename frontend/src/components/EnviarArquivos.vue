@@ -21,7 +21,7 @@ const props = defineProps({
     arquivoExcel: File,
 })
 
-const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'vendedoresAtualizados'])
+const emit = defineEmits(['respostaRecebida', 'arquivoPronto', 'vendoresTele', 'vendedoresPorta'])
 
 const carregando = ref(false)
 const resposta = ref(null)
@@ -31,9 +31,7 @@ const enviarArquivos = async()=>{
     resposta.value = null
 
     try{
-            
         const formData = new FormData()
-
         if(props.arquivoCsv){
             formData.append('csv', props.arquivoCsv)
         }
@@ -41,20 +39,20 @@ const enviarArquivos = async()=>{
             formData.append('excel', props.arquivoExcel)
         }
 
-        const response = await axios.post(
-            'http://127.0.0.1:5000/upload',
-            formData, 
-        )
-        resposta.value = response.data
-        console.log('Resposta do back: ', resposta.value)
+        const response = await axios.post('http://127.0.0.1:5000/upload',formData)
 
+        resposta.value = response.data
         emit('respostaRecebida', resposta.value)
         emit('arquivoPronto', true)
 
-        const vendedoresRes = await axios.get('http://127.0.0.1:5000/vendedores_tele')
-        console.log('Vendedores recebidos: ', vendedoresRes.data)
+        const [respostaTele, respostaPorta] = await Promisse.all([
+          axios.get('http://127.0.0.1:5000/vendedores_tele'),
+          axios.get('http://127.0.0.1:5000/vendedores_porta_a_porta')
+        ])
 
-        emit('vendedoresAtualizados', vendedoresRes.data)
+        emit('vendoresTele', respostaTele.data)
+        emit('vendedoresPorta', respostaPorta.data) 
+
     } catch(error) {
         console.error('Erro no envio: ', error)
         resposta.value = error?.response?.data || 'Erro desconhecido'

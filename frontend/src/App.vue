@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import './assets/style.css' // Importa o CSS principal
+import './assets/style.css'
 import EnviarCsvExcel from './components/EnviarCsvExcel.vue'
 import ListaVendedores from './components/ListaVendedores.vue'
 import DetalhesVendedor from './components/DetalhesVendedor.vue'
@@ -10,7 +10,14 @@ const vendedoresTele = ref([])
 const vendedoresPorta = ref([])
 const vendedorSelecionado = ref(null)
 const arquivoGerado = ref(false)
-const filtroCategoria = ref("todos") // 'todos' | 'porta' | 'externa' -são as opções de filtro
+const filtroCategoria = ref("todos")
+
+const vendedoresPortaFiltrados = computed(() => {
+  if (filtroCategoria.value === 'todos') {
+    return vendedoresPorta.value
+  }
+  return vendedoresPorta.value.filter(v => v.tipo_vendedor === filtroCategoria.value)
+})
 
 function receberTele(dados) {
   vendedoresTele.value = dados
@@ -18,20 +25,26 @@ function receberTele(dados) {
 
 function receberPorta(dados) {
   vendedoresPorta.value = dados
-
 }
 
-async function mostrarDetalhes(vendedor) {
+async function mostrarDetalhes(vendedor, tipo) {
   vendedorSelecionado.value = {
     nome: vendedor.nome,
     carregando: true,
     clientes: []
   }
 
-  try {
-    const response = await fetch(`http://localhost:5000/vendedor_tele/${encodeURIComponent(vendedor.nome)}`)
-    const clientes = await response.json()
+  let endpoint = ''
+  if (tipo === 'tele') {
+    endpoint = `/vendedor_tele/${encodeURIComponent(vendedor.nome)}`
+  } else {
+    endpoint = `/vendedores_porta_a_porta/${encodeURIComponent(vendedor.nome)}`
+  }
+  const url = `http://localhost:5000${endpoint}`
 
+  try {
+    const response = await fetch(url)
+    const clientes = await response.json()
     vendedorSelecionado.value = {
       nome: vendedor.nome,
       carregando: false,
@@ -39,40 +52,10 @@ async function mostrarDetalhes(vendedor) {
     }
   } catch (error) {
     console.error('Erro ao buscar detalhes:', error)
-    vendedorSelecionado.value.clientes = []
   } finally {
     vendedorSelecionado.value.carregando = false
   }
 }
-
-// Estes arrays poderiam vir de uma API no futuro para maior flexibilidade
-const nomesPortaPorta = [
-  "GLEICI IDALINA PEREIRA RUIZ",
-  "VEND.SILAS DE OLIVEIRA",
-  "MARIA ROSELI",
-  "ANA BEATRIZ DO PRADO SCAVONE",
-  "ELIZABETE ALVES",
-  "TALITA JUNIA DA CONCEICAO SILVA"
-]
-
-const nomesExterna = [
-  "ANDRE MENOSSI",
-  "MARIO ANTONIO DELGADO MOREL",
-  "NATANAEL DE SOUZA BRASIL",
-  "ANA GRACIELA BENITEZ",
-  "DIANA ELIZABETH FERREIRA PALACIOS",
-  "DEMETRIO FIDEL INSFRAN BALBUENA"
-]
-
-const vendedoresPortaFiltrados = computed(() => {
-  if (filtroCategoria.value === 'porta') {
-    return vendedoresPorta.value.filter(v => nomesPortaPorta.includes(v.nome))
-  } else if (filtroCategoria.value === 'externa'){
-    return vendedoresPorta.value.filter(v => nomesExterna.includes(v.nome))
-  } else {
-    return vendedoresPorta.value // todos
-  }
-})
 </script>
 
 <template>
@@ -83,23 +66,23 @@ const vendedoresPortaFiltrados = computed(() => {
         @vendedoresPorta="receberPorta"
         @arquivoPronto="arquivoGerado = true"
       />
-
       <BaixarArquivo v-if="arquivoGerado" class="download-section" />
 
       <div class="data-display-area">
-        <ListaVendedores
-          v-if="vendedoresTele.length || vendedoresPortaFiltrados.length"
-          :vendedoresTele="vendedoresTele"
-          :vendedoresPorta="vendedoresPortaFiltrados"
-          :filtroCategoria="filtroCategoria"
-          @update-filtro="filtroCategoria = $event"
-          @selecionar-vendedor="mostrarDetalhes"
-        />
+        <div class="vendedores-section">
+          <ListaVendedores
+            v-if="vendedoresTele.length || vendedoresPorta.length"
+            :vendedoresTele="vendedoresTele"
+            :vendedoresPorta="vendedoresPortaFiltrados"
+            :filtroCategoria="filtroCategoria"
+            @update-filtro="filtroCategoria = $event"
+            @selecionar-vendedor="mostrarDetalhes"
+          />
+        </div>
 
-        <DetalhesVendedor
-          v-if="vendedorSelecionado"
-          :vendedor="vendedorSelecionado"
-        />
+        <div class="detalhes-section" v-if="vendedorSelecionado">
+          <DetalhesVendedor :vendedor="vendedorSelecionado" />
+        </div>
       </div>
     </div>
   </main>
@@ -130,16 +113,21 @@ const vendedoresPortaFiltrados = computed(() => {
 }
 
 .data-display-area {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
   width: 100%;
   margin-top: 2rem;
 }
 
-@media (min-width: 768px) {
-  .data-display-area {
-    grid-template-columns: 1fr 1fr;
-  }
+.vendedores-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
 }
+
+.detalhes-section {
+  width: 100%;
+}
+
 </style>
