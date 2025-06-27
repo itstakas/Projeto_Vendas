@@ -9,15 +9,13 @@
 
 from flask import request, jsonify, send_file, Blueprint, current_app as app
 from werkzeug.utils import secure_filename
-from controladores.Classes import ProcessaDados
-from controladores.comparador import comparar_e_preencher
-from utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
-from utils.adicionar_clientes import adicionar_clientes_manualmente
+from ..controladores.Classes import ProcessaDados
+from ..controladores.comparador import comparar_e_preencher
+from ..utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
+from ..utils.adicionar_clientes import adicionar_clientes_manualmente
 import os
 import pandas as pd
 import traceback
-from unidecode import unidecode
-import re
 import sys
 
 # Listas para categorizar os vendedores.
