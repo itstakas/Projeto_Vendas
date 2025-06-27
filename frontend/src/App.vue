@@ -69,7 +69,7 @@ async function mostrarDetalhes(vendedor, tipo) {
       <BaixarArquivo v-if="arquivoGerado" class="download-section" />
 
       <div class="data-display-area">
-        <div class="vendedores-section">
+        <div class="lista-vendedores-wrapper">
           <ListaVendedores
             v-if="vendedoresTele.length || vendedoresPorta.length"
             :vendedoresTele="vendedoresTele"
@@ -127,6 +127,10 @@ async function mostrarDetalhes(vendedor, tipo) {
 }
 
 .detalhes-section {
+  width: 100%;
+}
+
+.lista-vendedores-wrapper {
   width: 100%;
 }
 
