@@ -1,0 +1,40 @@
+# Manual de instruções para o Render.com
+
+services:
+
+# Define nosso serviço web
+
+  - type: web
+    name: processador-de-vendas  \# Você pode dar o nome que quiser
+    env: python                  \# O ambiente é Python
+    plan: free                   \# Usamos o plano gratuito
+
+    # Comandos para construir o projeto (Build Commands)
+
+    # O Render executa estes comandos um por um
+
+    buildCommand: |
+
+    # 1\. Instala as bibliotecas Python
+
+    pip install -r requirements.txt
+
+    # 2\. Entra na pasta do frontend
+
+    cd frontend
+
+    # 3\. Instala as bibliotecas JavaScript
+
+    npm install
+
+    # 4\. "Assa o bolo" do frontend, criando a pasta 'dist'
+
+    npm run build
+
+    # Comando para iniciar o servidor (Start Command)
+
+    # Este comando é executado depois que o build termina
+
+    startCommand: "gunicorn backend.main:app"
+
+<!-- end list -->
