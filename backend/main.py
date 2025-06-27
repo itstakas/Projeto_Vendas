@@ -1,9 +1,7 @@
-from routes.views import views
+from .routes.views import views
 from flask import Flask
-# O "porteiro" que deixa o site conversar com o servidor
 from flask_cors import CORS
 import os
-# Ferramentas para interagir com o sistema (útil para o .exe)
 import sys
 import webbrowser                   # Ferramenta para abrir o navegador
 import time                         # Ferramenta para dar pausas (esperar)
