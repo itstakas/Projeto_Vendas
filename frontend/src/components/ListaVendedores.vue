@@ -90,6 +90,11 @@ const emit = defineEmits(['selecionar-vendedor', 'update-filtro'])
   width: 100%;
 }
 
+.dashboard-card {
+  width: 100%; /* <-- força os cards a ocuparem toda a coluna */
+}
+
+
 @media (max-width: 768px) {
   .listas-container {
     grid-template-columns: 1fr;
@@ -180,5 +185,8 @@ const emit = defineEmits(['selecionar-vendedor', 'update-filtro'])
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background-color: #ffffff;
+}
+:host{
+  width: 100%;
 }
 </style>
