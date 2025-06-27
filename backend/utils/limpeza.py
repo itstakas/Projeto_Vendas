@@ -51,11 +51,8 @@ def filtrar_mes_atual(df: pd.DataFrame) -> pd.DataFrame:
     """Filtra registros pela coluna 'Responsável por indicar' no mês atual."""
     if 'Responsável por indicar' not in df.columns:
         return df
-
     hoje = datetime.today()
-    df['Responsável por indicar'] = pd.to_datetime(
-        df['Responsável por indicar'], format='%d/%m/%Y', errors='coerce'
-    )
+    df['Responsável por indicar'] = pd.to_datetime(df['Responsável por indicar'], dayfirst=True, errors='coerce')
     return df[
         (df['Responsável por indicar'].dt.month == hoje.month) &
         (df['Responsável por indicar'].dt.year == hoje.year)
