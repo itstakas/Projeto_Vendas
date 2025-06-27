@@ -1,4 +1,4 @@
-from controladores.Classes import ProcessaDados
+from .Classes import ProcessaDados
 from rapidfuzz import fuzz #função fuzz da biblioteca rapidfuzz, utilizada para calcular similaridade entre strings
 from datetime import date #função date para capturar a data atual
 import pandas as pd 
