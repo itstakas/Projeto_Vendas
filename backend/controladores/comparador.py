@@ -18,7 +18,7 @@ def comparar_e_preencher(processador: ProcessaDados):
         encontrado = False
 
          # Percorre cada linha do DataFrame CSV
-        for idx_csv, row_csv in processador.csv_df.iterrows():
+        for _, row_csv in processador.csv_df.iterrows():
             # Extrai e padroniza o nome da linha do CSV
             nome_csv = str(row_csv['Id Cliente']).strip().upper()
 
@@ -41,7 +41,7 @@ def comparar_e_preencher(processador: ProcessaDados):
                 break
 
     # Se o nome do CSV já estiver presente no Excel, pula para o próximo    
-    for idx_csv, row_csv in processador.csv_df.iterrows():
+    for _, row_csv in processador.csv_df.iterrows():
         nome_csv = str(row_csv['Id Cliente']).strip().upper()
 
         # ESSES DOIS IF PEGUEI DO CHAT, SE FUNCIONAR EU DOU UM MORTAL PRA TRAS
@@ -57,7 +57,7 @@ def comparar_e_preencher(processador: ProcessaDados):
 
                 'NOME': nome_csv,
                 'VENDEDOR': None,
-                'DATA_CONTRATO': processador.data_atual,
+                'DATA_CONTRATO': pd.to_datetime(processador.data_atual),
                 'CATEGORIA': row_csv['Data de criação'],
                 'SUBCATEGORIA': row_csv['Origem (categoria)'],
                 'VENDEDOR_TELE': row_csv['Unidade'],
@@ -69,6 +69,6 @@ def comparar_e_preencher(processador: ProcessaDados):
             processador.excel_df = pd.concat([processador.excel_df, nova_linha], ignore_index=True)
             # Marca o nome como usado para evitar duplicatas
             nome_csv_usados.add(nome_csv) 
-            print(f"Adicionando novo cliente: {nome_csv}")
+            #print(f"Adicionando novo cliente: {nome_csv}")
 
     return processador

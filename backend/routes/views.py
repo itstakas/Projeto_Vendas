@@ -12,9 +12,7 @@ from werkzeug.utils import secure_filename
 from controladores.Classes import ProcessaDados
 from controladores.comparador import comparar_e_preencher
 from utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
-from utils.macro import colar_e_executar_macro
 from utils.adicionar_clientes import adicionar_clientes_manualmente
-from excel_processador import localizar_e_substituir_celulas
 import os
 import pandas as pd
 import traceback
@@ -90,26 +88,24 @@ def upload_files():
 
         # Cria o "ajudante" (o ProcessaDados) que vai carregar e organizar os dados pra gente
         processador = ProcessaDados(csv_path, excel_path)
-
-        # Define onde está o arquivo de "regras" (o antigo arquivo da macro)
-        caminho_macro = os.path.join(
-            application_path, 'Macro - Troca de Data.xlsm')
+        print("Tipo de dados apos: ProcessaDados", processador.excel_df['DATA_CONTRATO'].dtype)
 
         # Aqui a gente aplica todas as regras de negócio na planilha
         processador.csv_df = filtrar_mes_atual(processador.csv_df)
         processador = comparar_e_preencher(processador)
-        processador.excel_df = remover_colunas_desnecessarias(
-            processador.excel_df)
+        print("Tipo de dados apos:processador = comparar_e_preencher", processador.excel_df['DATA_CONTRATO'].dtype)
+
+        processador.excel_df = remover_colunas_desnecessarias(processador.excel_df)
+        print("Tipo de dados apos: remover_colunas_desnecessarias", processador.excel_df['DATA_CONTRATO'].dtype)
         processador.excel_df = remover_clientes_excluidos(processador.excel_df)
+        print("Tipo de dados apos:processador.excel_df = remover_clientes_excluidos", processador.excel_df['DATA_CONTRATO'].dtype)
 
         # Define o nome e o caminho do arquivo final
         caminho_resultado = os.path.join(upload_folder, 'resultado.xlsx')
         # Salva a planilha, já com os dados preparados, no arquivo 'resultado.xlsx'
         processador.salvar_excel_preenchido(caminho_resultado)
 
-        localizar_e_substituir_celulas(caminho_resultado, caminho_macro)
-
-        # adicionar_clientes_manualmente(caminho_resultado)
+        adicionar_clientes_manualmente(caminho_resultado)
 
         if not os.path.exists(caminho_resultado):
             return jsonify({'error': 'Erro ao salvar o arquivo final'}), 500
