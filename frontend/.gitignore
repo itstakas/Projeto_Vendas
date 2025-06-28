@@ -7,12 +7,17 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependências
 node_modules
-dist
-dist-ssr
+
+# Builds SSR e locais
+# dist-ssr
 *.local
 
-# Editor directories and files
+# dist (REMOVIDO para incluir build do Vue no deploy)
+# dist
+
+# Diretórios de editores e arquivos de sistema
 .vscode/*
 !.vscode/extensions.json
 .idea
