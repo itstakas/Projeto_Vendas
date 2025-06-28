@@ -1,10 +1,30 @@
+# Sistema de Processamento e Análise de Vendas
 
------
+[![Status do Deploy](https://img.shields.io/render/deploy?repo=itstakas/Projeto_Vendas&label=deploy&style=for-the-badge)](https://projeto-vendas.onrender.com)
 
-````markdown
-# Sistema de Processamento de Dados de Vendas
+Este projeto é uma aplicação web full-stack que combina um backend em Python (Flask) e um frontend em Vue.js para processar, corrigir e analisar dados de vendas a partir de arquivos CSV e Excel. A aplicação está hospedada na web e pode ser acessada publicamente.
 
-Este projeto é uma aplicação web que combina um backend em Python (Flask) e um frontend em Vue.js para processar e analisar dados de vendas a partir de arquivos CSV e Excel.
+**[➡️ Acessar a Aplicação Web](https://projeto-vendas.onrender.com)**
+
+---
+
+## ✨ Principais Funcionalidades
+
+- **Upload de Arquivos:** Interface amigável para o upload de arquivos de vendas (CSV) e de base de clientes (Excel).
+- **Processamento de Dados:** Lógica de backend robusta que limpa, compara e enriquece os dados, utilizando a biblioteca Pandas.
+- **Correção Inteligente de Datas:** Implementa uma rotina de parsing customizada para corrigir e padronizar datas com formatos inconsistentes (`DD/MM/AAAA` vs. `MM/DD/AAAA`) diretamente na fonte.
+- **Visualização Interativa:** O frontend em Vue.js exibe os dados processados em tempo real, permitindo a filtragem e a visualização de detalhes de vendedores.
+- **Deploy Contínuo:** A aplicação é automaticamente atualizada na web a cada novo `push` para a branch `main` no GitHub, utilizando um pipeline de CI/CD configurado no Render.
+
+## 🛠️ Tecnologias Utilizadas
+
+| Categoria | Tecnologias                                           |
+| :-------- | :---------------------------------------------------- |
+| **Backend** | Python, Flask, Pandas, Openpyxl, Gunicorn, RapidFuzz    |
+| **Frontend** | JavaScript, Vue.js, Axios, Tailwind CSS               |
+| **Deploy** | Render, Git, GitHub                                   |
+
+---
 
 ## 🚀 Como Rodar o Projeto Localmente (Para Desenvolvedores)
 
@@ -12,141 +32,100 @@ Siga estas instruções para configurar e executar o sistema em sua máquina par
 
 ### Pré-requisitos
 
-Para desenvolvimento, você precisará ter o seguinte software instalado:
-
-* **Python 3.8+**: [Baixar Python](https://www.python.org/downloads/)
-* **Node.js (LTS recomendado)** e **NPM** (gerenciador de pacotes que vem com o Node.js): [Baixar Node.js](https://nodejs.org/en/download/)
-* **Microsoft Excel**: Essencial para a funcionalidade de automação de macro VBA.
-* **Git**: Para clonar o repositório. [Baixar Git](https://git-scm.com/downloads)
+- **Python 3.8+** e `pip`.
+- **Node.js (LTS)** e `npm`.
+- **Git** para clonar o repositório.
 
 ### 💾 Instalação e Configuração
 
-Siga os passos abaixo, executando os comandos no seu terminal (Prompt de Comando ou PowerShell no Windows, Terminal no macOS/Linux).
+Execute os comandos no seu terminal (PowerShell, CMD, Git Bash, etc.).
 
 #### 1. Clonar o Repositório
 
-Primeiro, clone o projeto para sua máquina local:
+```bash
+git clone [https://github.com/itstakas/Projeto_Vendas.git](https://github.com/itstakas/Projeto_Vendas.git)
+cd Projeto_Vendas
+```
+
+#### 2. Configurar o Backend (Python)
+
+Abra um terminal na pasta raiz do projeto.
+
+**a. Criar e Ativar o Ambiente Virtual**
+É uma boa prática isolar as dependências do projeto.
 
 ```bash
-git clone https://github.com/itstakas/Projeto_Vendas.git
-cd PROJETO-VENDAS
-````
+# Criar o ambiente virtual (só precisa fazer isso uma vez)
+python -m venv venv
 
-#### 2\. Configurar o Backend (Python)
+# Ativar o ambiente virtual (precisa fazer toda vez que for trabalhar no projeto)
+# No Windows (PowerShell):
+.\venv\Scripts\activate
+```
+> **Nota:** Se o comando de ativação der erro no PowerShell, execute `Set-ExecutionPolicy RemoteSigned -Scope Process` primeiro e tente novamente.
 
-Navegue até o diretório do backend:
-
-```bash
-cd backend
-
-**a. Instalar Dependências do Python**
-
-Com o ambiente virtual ativado, instale as bibliotecas Python necessárias:
-
+**b. Instalar Dependências do Python**
+Com o ambiente `(venv)` ativo, instale as bibliotecas necessárias.
 ```bash
 pip install -r requirements.txt
 ```
 
-> **Nota:** Se você não tiver o arquivo `requirements.txt` ainda, você precisará criá-lo no seu ambiente de desenvolvimento original usando `pip freeze > requirements.txt` na pasta `backend` **com seu ambiente virtual ativado**.
+#### 3. Configurar o Frontend (Vue.js)
 
-**b. Preparar Arquivos Essenciais**
+Abra um **novo terminal**, separado do terminal do backend.
 
-  * **Copiar a Macro:** Copie o arquivo da macro `Macro - Troca de Data.xlsm` para a pasta `backend` (junto com `main.py`).
-
-**c. Configurar o Caminho da Macro (Atenção\!)**
-
-Este projeto utiliza uma macro VBA em Excel. Você precisará ajustar o caminho no código do backend:
-
-1.  Abra o arquivo `views.py` (localizado em `backend/routes/views.py`) em um editor de texto.
-2.  Encontre a linha que define `application_path` dentro do bloco `else` (aproximadamente na linha 20):
-    ```python
-    else:
-        application_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-    ```
-    Garanta que ela esteja configurada para apontar para o diretório `backend` em ambiente de desenvolvimento.
-
-#### 3\. Configurar o Frontend (Vue.js)
-
-Abra um **NOVO terminal** e navegue até o diretório do frontend:
-
+**a. Navegar até a Pasta do Frontend**
 ```bash
 cd frontend
 ```
 
-**a. Instalar Dependências do JavaScript**
-
-Instale os pacotes Node.js/JavaScript necessários para o frontend:
-
+**b. Instalar Dependências do JavaScript**
 ```bash
 npm install
 ```
 
-> **Nota:** Certifique-se de que o arquivo `package.json` exista na raiz da pasta `frontend`.
-
-**b. Construir o Frontend para Produção**
-
-Gere os arquivos estáticos otimizados do frontend. Isso é crucial para o empacotamento do executável:
-
-```bash
-npm run build
-```
-
 ### ▶️ Rodar a Aplicação (Modo de Desenvolvimento)
 
-Com ambos os terminais nas respectivas pastas (`backend` e `frontend`), e todas as dependências instaladas, você pode iniciar o servidor e o frontend.
+Agora você precisa de **dois terminais abertos** para rodar a aplicação completa.
 
-#### 1\. Iniciar o Backend
+**1. Iniciar o Backend (Terminal 1)**
+- Verifique se você está na pasta raiz (`Projeto_Vendas`) e se o ambiente `(venv)` está ativo.
+- Execute o comando:
+    ```bash
+    python backend/main.py
+    ```
+- O servidor Flask iniciará, geralmente em `http://127.0.0.1:5000`.
 
-No terminal da pasta `backend` (com o ambiente virtual Python ativado):
+**2. Iniciar o Frontend (Terminal 2)**
+- Verifique se você está na pasta `frontend`.
+- Execute o comando:
+    ```bash
+    npm run dev
+    ```
+- O servidor de desenvolvimento do Vue (Vite) iniciará, geralmente em um endereço como `http://localhost:5173`, e abrirá o site no seu navegador automaticamente.
 
-```bash
-python main.py
+Agora você pode fazer alterações no código do frontend e ver as atualizações na tela em tempo real, enquanto ele se comunica com o seu backend rodando localmente.
+
+---
+
+## ☁️ Sobre o Deploy
+
+Este projeto é configurado para deploy contínuo na plataforma **Render**. O arquivo `render.yaml` na raiz do projeto contém todas as instruções de build e start. Qualquer `push` para a branch `main` no GitHub irá disparar um novo deploy automaticamente.
+
+## 📁 Estrutura do Projeto
 ```
-
-Você verá mensagens indicando que o servidor Flask está rodando (geralmente em `http://127.0.0.1:5000/`) e o navegador abrirá automaticamente.
-
-#### 2\. Iniciar o Frontend (Não é necessário executar `npm run dev` separadamente se o Flask estiver servindo)
-
-Após iniciar o backend e o navegador abrir, o frontend será servido pelo Flask.
-
------
-
-## 📦 Como Usar o Aplicativo Empacotado (Para Usuários Finais)
-
-Para usuários finais, o projeto pode ser distribuído como um único arquivo executável para Windows.
-
-### Pré-requisitos para o Usuário
-
-  * **Sistema Operacional Windows:** O aplicativo é compatível apenas com Windows.
-  * **Microsoft Excel Instalado:** **Essencial** para a funcionalidade de processamento de macro VBA. Sem ele, a parte principal do processamento falhará.
-  * **Navegador Web Padrão:** Para acessar a interface do usuário.
-
-### 💾 Instalação e Execução
-
-1.  **Baixar o Executável atraves do link:** https://drive.google.com/file/d/1G_crTpWZwxADoUV-K7pF8yxXHT9Kfa1h/view?usp=sharing
-      * **Atenção:** Seu navegador e/ou antivírus podem exibir avisos de segurança ao baixar e executar arquivos `.exe` não assinados. Isso é normal para aplicativos empacotados com PyInstaller. Você pode precisar clicar em "Manter", "Executar mesmo assim" ou "Mais informações" \> "Executar".
-2.  **Executar o Aplicativo:** Dê um duplo clique no arquivo `main.exe`.
-3.  **Acesso à Interface:**
-      * Uma janela de console **aparecerá**
-      * Seu navegador web padrão abrirá automaticamente a interface do aplicativo em `http://127.0.0.1:5000/`.
-4.  **Local dos Arquivos:** O aplicativo criará uma pasta `uploads_app` no mesmo diretório do executável (`main.exe`) para armazenar os arquivos enviados e o `resultado.xlsx`.
-
-### 🛑 Como Encerrar o Aplicativo
-
-Fecha a janela de console que o aplicativo irá fechar.
-
------
-
-## ⚠️ Limitações Importantes
-
-  * **Compatibilidade com Windows:** Devido ao uso de automação de macro VBA do Microsoft Excel (`pywin32`), o backend só pode ser executado em **sistemas operacionais Windows**.
-  * **Dependência do Excel:** O Microsoft Excel **precisa estar instalado** na máquina para que a funcionalidade da macro seja executada.
-
------
-
-## 🛠️ Contribuição (Opcional)
-
-Se você deseja contribuir para o desenvolvimento deste projeto, sinta-se à vontade para abrir issues, enviar pull requests ou entrar em contato.
-
-```
-```
+/Projeto_Vendas
+├── backend/                # Contém toda a lógica Python (Flask)
+│   ├── controladores/      # Classes e lógica de negócio
+│   ├── routes/             # Definição das rotas da API (views)
+│   ├── utils/              # Funções utilitárias (limpeza, etc.)
+│   └── main.py             # Ponto de entrada do servidor Flask
+├── frontend/               # Contém toda a interface (Vue.js)
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   └── components/
+│   └── ...
+├── .vscode/                # Configurações do VS Code (opcional)
+├── render.yaml             # Manual de instruções para o deploy no Render
+└── requirements.txt        # Lista de dependências do Python
