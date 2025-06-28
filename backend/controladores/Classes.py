@@ -65,5 +65,5 @@ class ProcessaDados:
             if col in df_para_salvar.columns and pd.api.types.is_datetime64_any_dtype(df_para_salvar[col]):
                 df_para_salvar[col] = df_para_salvar[col].dt.strftime('%d/%m/%Y').replace('NaT', '')
         
-        df_para_salvar.to_excel(caminho_saida, index=False)
+        df_para_salvar.to_excel(caminho_saida, index=False, engine='xlsxwriter')
         print(f"Arquivo salvo em: {caminho_saida}")
