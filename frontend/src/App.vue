@@ -50,7 +50,7 @@ async function mostrarDetalhes(vendedor, tipo) {
   }
 
   // CORREÇÃO 2: Usando http em vez de https
-  const url = `http://localhost:5000${endpoint}`
+  const url = endpoint
 
   try {
     const response = await fetch(url)

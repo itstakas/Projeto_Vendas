@@ -92,14 +92,14 @@ async function enviarArquivos() {
   formData.append('excel', arquivoExcel.value)
 
   try {
-    const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
+    const response = await axios.post('/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
-    const vendedoresResTele = await axios.get('http://localhost:5000/vendedores_tele')
+    const vendedoresResTele = await axios.get('/vendedores_tele')
     emit('vendedoresTele', vendedoresResTele.data)
 
-    const vendedoresResPorta = await axios.get('http://localhost:5000/vendedores_porta_a_porta')
+    const vendedoresResPorta = await axios.get('/vendedores_porta_a_porta')
     emit('vendedoresPorta', vendedoresResPorta.data)
 
     emit('arquivoPronto', true)

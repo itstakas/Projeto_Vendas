@@ -12,7 +12,7 @@
 <script setup>
 function baixar() {
   const link = document.createElement('a')
-  link.href = 'http://127.0.0.1:5000/download'
+  link.href = '/download'
   link.setAttribute('download', 'resultado.xlsx')
   document.body.appendChild(link)
   link.click()

@@ -1,6 +1,6 @@
 # Arquivo: backend/main.py
 
-# Seus imports, mas agora vamos usar o 'send_from_directory' que é mais robusto
+# Importações básicas do Flask e CORS para permitir comunicação com o frontend
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 import os
@@ -8,47 +8,50 @@ import sys
 import webbrowser
 import time
 
-# Importa o seu blueprint de rotas
+# Importa minhas rotas definidas separadamente no blueprint
 from .routes.views import views
 
-# --- LÓGICA DE CAMINHOS CORRIGIDA PARA O SERVIDOR ---
+# --- CONFIGURAÇÃO DO FRONTEND ---
 
-# Define a pasta onde o frontend "assado" (build) está.
-# Esta forma é mais robusta em um servidor.
+# Aqui eu defino a pasta onde o Vue gera os arquivos finais após o build.
+# Isso garante que o Flask saiba onde está o frontend "compilado".
 STATIC_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
 
-# Cria a aplicação Flask, mas agora dizemos a ela para NÃO gerenciar os arquivos estáticos automaticamente.
-# Nós vamos fazer isso manualmente na rota principal para ter mais controle.
+# Crio a aplicação Flask sem o gerenciador automático de arquivos estáticos,
+# porque quero controlar isso manualmente com mais precisão.
 app = Flask(__name__, static_folder=None)
 
-# Configuração final do CORS e das rotas
+# Ativo o CORS para evitar problemas de comunicação entre frontend e backend
 CORS(app)
+
+# Registro o blueprint onde estão as rotas da minha API
 app.register_blueprint(views)
 
+# --- ROTA PARA SERVIR O FRONTEND ---
 
-# --- ROTA PRINCIPAL CORRIGIDA ---
-
-# Esta rota agora vai lidar com a página inicial e todos os outros caminhos do frontend
+# Essa rota cuida de todas as requisições do frontend SPA (Single Page Application)
+# Se o caminho requisitado for um arquivo existente (ex: /assets/logo.png), ele será servido
+# Caso contrário (ex: /vendedores), ele carrega o index.html para o Vue assumir a navegação
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    # Se o caminho existir dentro da nossa pasta de frontend, entrega o arquivo correspondente
     if path != "" and os.path.exists(os.path.join(STATIC_FOLDER, path)):
         return send_from_directory(STATIC_FOLDER, path)
-    # Se não, ou se for a rota raiz, entrega o index.html (a porta de entrada do site)
     else:
         return send_from_directory(STATIC_FOLDER, 'index.html')
 
+# --- EXECUÇÃO LOCAL ---
 
-# Bloco que só roda quando a gente executa este arquivo diretamente no nosso PC
+# Essa parte só roda se eu executar o main.py diretamente
+# Serve para iniciar o servidor localmente e abrir o navegador automaticamente
 if __name__ == "__main__":
     url = "http://127.0.0.1:5000"
     print(f"Servidor Flask tentando iniciar em {url}...")
-    
-    # Esta parte de abrir o navegador não é necessária no servidor, mas não atrapalha.
+
     try:
         webbrowser.open_new(url)
     except Exception:
         print("Não foi possível abrir o navegador. Acesse a URL manualmente.")
 
+    # Inicia o servidor Flask na porta 5000
     app.run(debug=False, host='127.0.0.1', port=5000)
