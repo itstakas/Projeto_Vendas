@@ -74,7 +74,7 @@ def upload_files():
         return jsonify({'download_path': '/download'}), 200
 
     except Exception as e:
-        traceback.print_exc()
+        print("Erro no upload:", e)
         return jsonify({'error': str(e)}), 500
 
 # --- O RESTO DAS SUAS ROTAS (QUE JÁ ESTAVAM CORRETAS) ---
