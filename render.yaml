@@ -35,6 +35,7 @@ services:
 
     # Este comando é executado depois que o build termina
 
-    startCommand: "gunicorn backend.main:app"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT backend.main:app"
+
 
 <!-- end list -->
