@@ -88,6 +88,8 @@ def download():
         return send_file(caminho_arquivo, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='resultado.xlsx')
     return jsonify({'error': 'Arquivo ainda não foi gerado'}), 404
 
+
+
 @views.route('/vendedores_tele', methods=['GET'])
 def vendedores_tele():
     # ... seu código de vendedores_tele ...
@@ -107,6 +109,8 @@ def vendedores_tele():
         resultado.append({'nome': vendedor, 'total_vendas': int(vendas['QTD_VENDAS'].sum()), 'vendas_mensais': vendas[['MES', 'QTD_VENDAS']].to_dict(orient='records')})
     return jsonify(resultado)
 
+
+
 @views.route('/vendedor_tele/<nome>', methods=['GET'])
 def detalhes_vendedor(nome):
     # ... seu código de detalhes_vendedor ...
@@ -123,6 +127,8 @@ def detalhes_vendedor(nome):
     df_vendedor['DATA_CONTRATO'] = df_vendedor['DATA_CONTRATO'].dt.strftime('%d/%m/%Y').fillna("Data Inválida")
     resultado = df_vendedor[['NOME', 'DATA_CONTRATO']].copy()
     return jsonify(resultado.to_dict(orient='records'))
+
+
 
 @views.route('/vendedores_porta_a_porta', methods=['GET'])
 def vendedores_porta_a_porta():
@@ -147,6 +153,8 @@ def vendedores_porta_a_porta():
             tipo = 'externa'
         resultado.append({'nome': vendedor, 'total_vendas': int(vendas['QTD_VENDAS'].sum()), 'vendas_mensais': vendas[['MES', 'QTD_VENDAS']].to_dict(orient='records'), 'tipo_vendedor': tipo})
     return jsonify(resultado)
+
+
 
 @views.route('/vendedores_porta_a_porta/<nome>', methods=['GET'])
 def detalhes_vendedor_porta_a_porta(nome):
