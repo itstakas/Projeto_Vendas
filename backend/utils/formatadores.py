@@ -26,7 +26,7 @@ def corrigir_data_inteligentemente(data_str: str) -> pd.Timestamp:
         possivel_mes = int(data_str[5:7])
         possivel_dia = int(data_str[8:10])
 
-        if possivel_dia >= 12 and possivel_mes: 
+        if possivel_dia <= 12 and possivel_mes <= 12: 
             #É ambiguo e converte para o formato brasileiro de dia/mes/ano
             return pd.to_datetime(f"{possivel_mes}/{possivel_dia}/{ano}")
         else:
@@ -37,5 +37,4 @@ def corrigir_data_inteligentemente(data_str: str) -> pd.Timestamp:
             return pd.to_datetime(data_str, format='%d/%m/Y')
         except:
             return pd.NaT #Se mesmo assim tudo falhar, retorna como NaT
-        
         

@@ -5,8 +5,8 @@
 # e então encontrar as pastas 'controladores' e 'utils'.
 from flask import request, jsonify, send_file, Blueprint, current_app as app
 from werkzeug.utils import secure_filename
-from ..controladores.Classes import ProcessaDados
-from ..controladores.comparador import comparar_e_preencher
+from ..processamento_de_dados.processador_vendas import ProcessaDados
+from ..processamento_de_dados.comparador import comparar_e_preencher
 from ..utils.limpeza import remover_colunas_desnecessarias, remover_clientes_excluidos, filtrar_mes_atual
 from ..utils.adicionar_clientes import adicionar_clientes_manualmente
 import os
