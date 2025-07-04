@@ -1,5 +1,5 @@
 # Arquivo: backend/controladores/comparador.py
-from .Classes import ProcessaDados
+from .processador_vendas import ProcessaDados
 from rapidfuzz import process, fuzz
 from datetime import date
 import pandas as pd
