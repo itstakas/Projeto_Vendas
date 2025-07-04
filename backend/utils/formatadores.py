@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 
 def corrigir_data_inteligentemente(data_str: str) -> pd.Timestamp:
     """
@@ -27,14 +28,16 @@ def corrigir_data_inteligentemente(data_str: str) -> pd.Timestamp:
         possivel_dia = int(data_str[8:10])
 
         if possivel_dia <= 12 and possivel_mes <= 12: 
-            #É ambiguo e converte para o formato brasileiro de dia/mes/ano
-            return pd.to_datetime(f"{possivel_mes}/{possivel_dia}/{ano}")
+            # É ambiguo e converte para o formato brasileiro de dia/mes/ano
+            data_correta = datetime(year=ano, month=possivel_dia, day=possivel_mes)
+
+            return pd.to_datetime(data_correta)
         else:
             # Não é ambíguo, confia no formato original
-            return pd.to_datetime("Y/M/D")
+            return pd.to_datetime(data_str, format='%Y-%m-%d')
     except (ValueError, TypeError, IndexError): #Se falhar é formato brasileiro
         try:
-            return pd.to_datetime(data_str, format='%d/%m/Y')
+            return pd.to_datetime(data_str, format='%d/%m/%Y')
         except:
             return pd.NaT #Se mesmo assim tudo falhar, retorna como NaT
-        
+

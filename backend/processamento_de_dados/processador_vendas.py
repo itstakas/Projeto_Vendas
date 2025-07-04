@@ -8,10 +8,12 @@ from utils.formatadores import corrigir_data_inteligentemente
 COLUNAS_DE_DATA = ['DATA_CONTRATO', 'DATA_ADESAO']
 NOVAS_COLUNAS = ['CRM', 'VENDEDOR_TELE', 'CATEGORIA', 'SUBCATEGORIA']
 
+
 class ProcessadorVendas:
     """
         Classe responsavel por carregar, limpar, processar e salvar dados de vendas do arquivo csv e excel
     """
+
     def __initi__(self, csv_path: str, excel_path: str):
         """
             Inicializa o processaor com os caminhos dos arquivos, nenhum dado é carregado ou processado aqui
@@ -30,7 +32,8 @@ class ProcessadorVendas:
         """
         print("Iniciando carregamento dos arquivos...")
 
-        self.csv_df = pd.read_csv(self.csv_path, sep=";", encoding='utf-8-sig', on_bad_lines='skip')
+        self.csv_df = pd.read_csv(
+            self.csv_path, sep=";", encoding='utf-8-sig', on_bad_lines='skip')
         self.excel_df = pd.read_excel(self.excel_path, dtype=str)
 
         print("Arquivos carregados com sucesso!")
@@ -43,15 +46,15 @@ class ProcessadorVendas:
 
         for col in COLUNAS_DE_DATA:
             if col in self.excel_df.columns:
-                self.excel_df[col] = self.excel_df[col].apply(corrigir_data_inteligentemente) 
+                self.excel_df[col] = self.excel_df[col].apply(
+                    corrigir_data_inteligentemente)
 
         print("Datas corrigidas")
-    
+
     def _preecnher_novas_colunas(self):
         """
         Adiciona colunas vazias no datafram e do excel, as colunas que usaremos para o relatorio, 'CRM', 'VENDEDOR_TELE', 'CATEGORIA', 'SUBCATEGORIA
         '"""
-
         print("Adicionando colunas")
 
         for col in NOVAS_COLUNAS:
@@ -80,9 +83,10 @@ class ProcessadorVendas:
         print("salvando os arquivos...")
 
         if self.excel_df is None:
-            print("Erro: Nenhum dado foi processado. Execute o method .executar() primeiro")
+            print(
+                "Erro: Nenhum dado foi processado. Execute o method .executar() primeiro")
             return
-        
+
         print(f"Salvando arquivos em: {caminho_saida}")
 
         df_para_salvar = self.excel_df.copy()
@@ -90,9 +94,10 @@ class ProcessadorVendas:
 
         for col in COLUNAS_DE_DATA:
             if col in df_para_salvar.columns and pd.api.types.is_datetime64_any_dtype(df_para_salvar[col]):
-                df_para_salvar[col] = df_para_salvar[col].dt.strftime('%d/%m/%Y').replace('NaT', '')
+                df_para_salvar[col] = df_para_salvar[col].dt.strftime(
+                    '%d/%m/%Y').replace('NaT', '')
 
-        df_para_salvar.to_excel(caminho_saida, index=False, engine='xlsxwriter')
+        df_para_salvar.to_excel(
+            caminho_saida, index=False, engine='xlsxwriter')
 
         print("Arquivo salvo com sucesso")
-                
