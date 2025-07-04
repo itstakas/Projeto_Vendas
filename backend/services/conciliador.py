@@ -44,7 +44,9 @@ class ConciliadorVendas:
         print(f"   {len(self.matches)} correspondências encontradas.")
 
     def _atualizar_clientes_existentes_vetorizados(self):
-        """Atualiza os dados usando a abordagem vetorizada (rápida) do pandas."""
+        """
+        Atualiza os dados usando a abordagem vetorizada (rápida) do pandas.
+        """
         print("-> Atualizando clientes existentes...")
         if not self.matches:
             print("   Nenhuma correspondência para atualizar.")
@@ -53,8 +55,14 @@ class ConciliadorVendas:
         mapa_excel_para_csv = pd.Series(self.matches)
         self.df_excel['csv_match'] = self.df_excel['NOME_NORM'].map(mapa_excel_para_csv)
 
-        csv_mapeamento = self.df_csv.set_index('Id Cliente_NORM')
+        # Antes de criar o índice, removemos as duplicatas do CSV,
+        # mantendo apenas a primeira ocorrência de cada cliente.
+        df_csv_unico = self.df_csv.drop_duplicates(subset=['Id Cliente_NORM'], keep='first')
+
+        # Agora, criamos o mapeamento a partir do DataFrame JÁ SEM duplicatas.
+        csv_mapeamento = df_csv_unico.set_index('Id Cliente_NORM')
         
+        # O resto do código continua igual...
         self.df_excel['VENDEDOR_TELE'] = self.df_excel['csv_match'].map(csv_mapeamento['Unidade'])
         self.df_excel['CATEGORIA'] = self.df_excel['csv_match'].map(csv_mapeamento['Data de criação'])
         self.df_excel['SUBCATEGORIA'] = self.df_excel['csv_match'].map(csv_mapeamento['Origem (categoria)'])

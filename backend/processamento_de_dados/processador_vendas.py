@@ -16,16 +16,14 @@ class ProcessadorVendas:
     """
 
     def __init__(self, csv_path: str, excel_path: str):
-        """
-            Inicializa o processaor com os caminhos dos arquivos, nenhum dado é carregado ou processado aqui
-        """
-        print("Objeto ProcessadorVendas criado")
+        print("Objeto ProcessadorVendas criado.")
         self.csv_path = csv_path
         self.excel_path = excel_path
 
-        # O estado (os dataframes) iniciam com Nnone, so sera preenchido quando o processamento for executado
-        self.csv_path = None
-        self.excel_path = None
+        # A CORREÇÃO: inicializamos as variáveis que vão guardar os DataFrames,
+        # e não as que guardam os caminhos.
+        self.df_csv = None
+        self.df_excel = None
 
     def _carregar_dados(self):
         """
@@ -33,9 +31,9 @@ class ProcessadorVendas:
         """
         print("Iniciando carregamento dos arquivos...")
 
-        self.csv_df = pd.read_csv(
+        self.df_csv = pd.read_csv(
             self.csv_path, sep=";", encoding='utf-8-sig', on_bad_lines='skip')
-        self.excel_df = pd.read_excel(self.excel_path, dtype=str)
+        self.df_excel = pd.read_excel(self.excel_path, dtype=str)
 
         print("Arquivos carregados com sucesso!")
 
@@ -46,8 +44,8 @@ class ProcessadorVendas:
         print("Aplicando correção inteligente nas coluanas de datas...")
 
         for col in COLUNAS_DE_DATA:
-            if col in self.excel_df.columns:
-                self.excel_df[col] = self.excel_df[col].apply(
+            if col in self.df_excel.columns:
+                self.df_excel[col] = self.df_excel[col].apply(
                     corrigir_data_inteligentemente)
 
         print("Datas corrigidas")
@@ -59,7 +57,7 @@ class ProcessadorVendas:
         print("Adicionando colunas")
 
         for col in NOVAS_COLUNAS:
-            self.excel_df[col] = None
+            self.df_excel[col] = None
 
         print("Novas colunas adicionadas")
 
@@ -83,14 +81,14 @@ class ProcessadorVendas:
 
         print("salvando os arquivos...")
 
-        if self.excel_df is None:
+        if self.df_excel is None:
             print(
                 "Erro: Nenhum dado foi processado. Execute o method .executar() primeiro")
             return
 
         print(f"Salvando arquivos em: {caminho_saida}")
 
-        df_para_salvar = self.excel_df.copy()
+        df_para_salvar = self.df_excel.copy()
         # USANDO A CONSTANTE AQUI TAMBEM (PRINCIPIO DRY)
 
         for col in COLUNAS_DE_DATA:

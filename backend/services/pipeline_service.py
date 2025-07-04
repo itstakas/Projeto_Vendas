@@ -26,7 +26,7 @@ def executar_pipeline_completo(csv_path: str, excel_path: str, caminho_saida: st
 
     # --- ESTÁGIO 2: O "Detetive" faz todo o trabalho de conciliação. ---
     # Uma única chamada para executar todas as etapas de enriquecimento.
-    conciliador = ConciliadorVendas(processador.df_excel, processador.df_csv)
+    conciliador = ConciliadorVendas(df_excel=processador.df_excel, df_csv=processador.df_csv)
     dataframe_final = conciliador.enriquecer_dados()
 
     # --- ESTÁGIO 3: O Pipeline apenas salva o resultado final. ---
