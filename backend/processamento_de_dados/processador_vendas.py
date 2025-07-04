@@ -14,7 +14,7 @@ class ProcessadorVendas:
         Classe responsavel por carregar, limpar, processar e salvar dados de vendas do arquivo csv e excel
     """
 
-    def __initi__(self, csv_path: str, excel_path: str):
+    def __init__(self, csv_path: str, excel_path: str):
         """
             Inicializa o processaor com os caminhos dos arquivos, nenhum dado é carregado ou processado aqui
         """
