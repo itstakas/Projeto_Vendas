@@ -1,7 +1,8 @@
 # Arquivo: controladores/Classes.py
 import pandas as pd
 from datetime import datetime
-from utils.formatadores import corrigir_data_inteligentemente
+from ..utils.formatadores import corrigir_data_inteligentemente
+from ..config import COLUNAS_PARA_REMOVER, NOMES_EXCLUIR
 
 """Os prints são mais para saber se algo der errado no codigo, onde exatamente estavamos, lembrete: Apagar os prints(opcional)"""
 
