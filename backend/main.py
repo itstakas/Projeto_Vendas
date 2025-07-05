@@ -1,52 +1,63 @@
 # Arquivo: backend/main.py
+# Este é o arquivo principal que liga e roda o servidor.
 
-# Importações básicas do Flask e CORS para permitir comunicação com o frontend
+# --- Importações ---
+# Aqui, nós "puxamos" as ferramentas que o programa precisa para funcionar.
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 import os
-import sys
 import webbrowser
-import time
 
-# Importa minhas rotas definidas separadamente no blueprint
+# Puxa todas as nossas "páginas" da API, que estão definidas em outro arquivo.
 from backend.routes.views import views
 
-# --- CONFIGURAÇÃO DO FRONTEND ---
 
-# Aqui eu defino a pasta onde o Vue gera os arquivos finais após o build. Isso garante que o Flask saiba onde está o frontend "compilado".
-STATIC_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
+# --- Configuração da Aplicação ---
+# Nesta parte, nós preparamos e configuramos o nosso programa.
 
-# Crio a aplicação Flask sem o gerenciador automático de arquivos estáticos,porque quero controlar isso manualmente com mais precisão.
+# Diz ao programa onde encontrar a pasta com os arquivos do site (o frontend).
+STATIC_FOLDER = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', 'frontend', 'dist'))
+
+# Cria o nosso "servidor" web usando a ferramenta Flask.
 app = Flask(__name__, static_folder=None)
 
-# Ativo o CORS para evitar problemas de comunicação entre frontend e backend
+# Permite que o site (frontend) possa conversar com este programa (backend) sem erros.
 CORS(app)
 
-# Registro o blueprint onde estão as rotas da minha API
+# Avisa ao servidor sobre todas as páginas da API que importamos.
 app.register_blueprint(views)
 
-# --- ROTA PARA SERVIR O FRONTEND ---
 
-# Essa rota cuida de todas as requisições do frontend SPA (Single Page Application) Se o caminho requisitado for um arquivo existente (ex: /assets/logo.png), ele será servido Caso contrário (ex: /vendedores), ele carrega o index.html para o Vue assumir a navegação
+# --- Rota para Servir o Frontend ---
+# Esta parte é responsável por entregar o seu site para o navegador do usuário.
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
+    """
+    Esta rota "pega-tudo" serve o site. Se o navegador pede um arquivo (como uma imagem), ela entrega o arquivo. Se pede uma página (como /vendedores), ela entrega a "casca" do site (index.html) para o Vue.js poder trabalhar.
+    """
+    # Se o que o navegador pediu for um arquivo de verdade (CSS, JS, imagem)...
     if path != "" and os.path.exists(os.path.join(STATIC_FOLDER, path)):
+        # ...entrega esse arquivo.
         return send_from_directory(STATIC_FOLDER, path)
+    # Se não, entrega a página principal do site.
     else:
         return send_from_directory(STATIC_FOLDER, 'index.html')
 
-# --- EXECUÇÃO LOCAL ---
 
-# Essa parte só roda se eu executar o main.py diretamente Serve para iniciar o servidor localmente e abrir o navegador automaticamente
+# --- Bloco de Execução Principal ---
+# O código aqui só roda quando você executa "python -m backend.main" no terminal.
 if __name__ == "__main__":
     url = "http://127.0.0.1:5000"
-    print(f"Servidor Flask tentando iniciar em {url}...")
+    print(f"Servidor ligando no endereço: {url}")
 
+    # Tenta abrir o site no navegador automaticamente para facilitar.
     try:
         webbrowser.open_new(url)
     except Exception:
-        print("Não foi possível abrir o navegador. Acesse a URL manualmente.")
+        print("Não consegui abrir o navegador. Pode abrir manualmente.")
 
-    # Inicia o servidor Flask na porta 5000
+    # Liga o servidor e o deixa rodando para receber "visitas" (requisições).
     app.run(debug=False, host='127.0.0.1', port=5000)
