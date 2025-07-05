@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from ..utils.formatadores import corrigir_data_inteligentemente
+from backend.utils.formatadores import corrigir_data_inteligentemente
 from ..config import COLUNAS_PARA_REMOVER, NOMES_EXCLUIR, COLUNA_DATA_CONTRATO_EXCEL, COLUNA_DATA_ADESAO_EXCEL, COLUNA_NOME_EXCEL, COLUNA_RESPONSAVEL_CSV
 
 NOVAS_COLUNAS = ['CRM', 'VENDEDOR_TELE', 'CATEGORIA', 'SUBCATEGORIA']
@@ -19,9 +19,27 @@ class ProcessadorVendas:
         self._normalizar_nomes_colunas()
 
     def _normalizar_nomes_colunas(self):
-        self.df_excel.columns = [str(col).strip().upper() for col in self.df_excel.columns]
-        self.df_csv.columns = [str(col).strip().upper() for col in self.df_csv.columns]
-
+        """Padroniza os nomes das colunas para MAIÚSCULAS e remove espaços."""
+        print("-> Padronizando nomes das colunas...")
+        
+        if self.df_excel is not None:
+            self.df_excel.columns = [str(col).strip().upper() for col in self.df_excel.columns]
+            # --- SUPER DEBUG: VAMOS VER OS NOMES REAIS DAS COLUNAS ---
+            print("\n[DEBUG] Nomes das colunas do EXCEL encontradas e padronizadas:")
+            print(list(self.df_excel.columns))
+            print("-" * 50)
+            # -----------------------------------------------------------------
+        
+        if self.df_csv is not None:
+            self.df_csv.columns = [str(col).strip().upper() for col in self.df_csv.columns]
+            # --- SUPER DEBUG ---
+            print("\n[DEBUG] Nomes das colunas do CSV encontradas e padronizadas:")
+            print(list(self.df_csv.columns))
+            print("-" * 50)
+            # -----------------------------------------------------------------
+        
+        print("   Nomes de colunas padronizados.")
+        
     def _filtrar_csv_por_mes_atual(self):
         """Filtra do DataFrame do CSV para manter apenas registro do mes e do ano atuais"""
 

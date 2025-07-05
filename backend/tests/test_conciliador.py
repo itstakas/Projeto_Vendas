@@ -5,7 +5,7 @@
 
 import pandas as pd
 import numpy as np  # Usamos numpy para valores nulos
-from services.conciliador import ConciliadorVendas
+from backend.services.conciliador import ConciliadorVendas
 
 # O nome da função de teste deve começar com "test_"
 def test_conciliador_atualiza_cliente_existente_com_match_fuzzy():

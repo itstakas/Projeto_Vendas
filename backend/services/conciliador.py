@@ -1,7 +1,7 @@
 import pandas as pd
 from rapidfuzz import process, fuzz
 from datetime import date, datetime
-from ..config import (
+from backend.config import (
     NOVOS_CLIENTES_MANUAIS, COLUNA_NOME_EXCEL, COLUNA_ID_CLIENTE_CSV,
     COLUNA_UNIDADE_CSV, COLUNA_DATA_CRIACAO_CSV, COLUNA_ORIGEM_CSV
 )

@@ -1,36 +1,60 @@
-# Arquivo: services/pipeline_service.py
-# Este serviço contém o fluxo completo de processamento,
-# agindo como o "Gerente da Fábrica".
-
-# O gerente só precisa conhecer seus "chefes de setor".
+import pandas as pd
 from ..processamento_de_dados.processador_vendas import ProcessadorVendas
-from .conciliador import ConciliadorVendas
+from ..services.conciliador import ConciliadorVendas
+from ..config import COLUNA_DATA_CONTRATO_EXCEL, COLUNA_DATA_ADESAO_EXCEL
 
 def executar_pipeline_completo(csv_path: str, excel_path: str, caminho_saida: str):
     """
-    Orquestra as grandes etapas do processamento de dados,
-    delegando o trabalho pesado para as classes de serviço.
+    Orquestra as grandes etapas do processamento de dados com depuração.
     """
-
     print("--- INICIANDO PIPELINE DE DADOS ---")
 
-    # Uma única chamada para executar todas as etapas de processamento.
+    # Estágio 1: Processamento
     processador = ProcessadorVendas(csv_path, excel_path)
     processador.executar()
     
-    # Verificação de segurança para garantir que a primeira etapa funcionou
-    if processador.df_excel is None or processador.df_csv is None:
-        print("ERRO: Falha no estágio de processamento inicial. Pipeline abortado.")
-        # Retornar False pode ajudar a rota da API a saber que algo deu errado
+    if processador.df_excel is None:
+        print("ERRO: df_excel não foi criado pelo Processador.")
         return False
+    
+    # --- DEBUG PONTO 1 ---
+    print("\n[DEBUG 1] Após o Processador.executar(), como está a coluna de data?")
+    print("Primeiras 5 linhas da coluna DATA_CONTRATO:")
+    print(processador.df_excel[COLUNA_DATA_CONTRATO_EXCEL.upper()].head())
+    print(f"Tipo da coluna (dtype): {processador.df_excel[COLUNA_DATA_CONTRATO_EXCEL.upper()].dtype}\n")
+    # ---------------------
 
-    # --- ESTÁGIO 2: O "Detetive" faz todo o trabalho de conciliação. ---
-    # Uma única chamada para executar todas as etapas de enriquecimento.
-    conciliador = ConciliadorVendas(df_excel=processador.df_excel, df_csv=processador.df_csv)
+    # Estágio 2: Conciliação
+    conciliador = ConciliadorVendas(processador.df_excel, processador.df_csv)
     dataframe_final = conciliador.enriquecer_dados()
 
-    # A operação de salvar é a última coisa que acontece.
-    dataframe_final.to_excel(caminho_saida, index=False)
+    # --- DEBUG PONTO 2 ---
+    print("\n[DEBUG 2] Após o Conciliador.enriquecer_dados(), como está a coluna?")
+    print("Primeiras 5 linhas da coluna DATA_CONTRATO:")
+    print(dataframe_final[COLUNA_DATA_CONTRATO_EXCEL.upper()].head())
+    print(f"Tipo da coluna (dtype): {dataframe_final[COLUNA_DATA_CONTRATO_EXCEL.upper()].dtype}\n")
+    # ---------------------
+
+    # --- ETAPA DE FORMATAÇÃO FINAL ---
+    print("-> Formatando datas para o arquivo de saída...")
+    colunas_de_data_final = [COLUNA_DATA_CONTRATO_EXCEL.upper(), COLUNA_DATA_ADESAO_EXCEL.upper()]
     
-    print(f"--- PIPELINE CONCLUÍDO. Resultado salvo em: {caminho_saida} ---")
-    return True
+    for col in colunas_de_data_final:
+        if col in dataframe_final.columns:
+            # --- DEBUG PONTO 3 ---
+            print(f"\n[DEBUG 3] Formatando a coluna '{col}'.")
+            
+            dataframe_final[col] = pd.to_datetime(dataframe_final[col], errors='coerce').dt.strftime('%d/%m/%Y').fillna('')
+            
+            # --- DEBUG PONTO 4 ---
+            print(f"[DEBUG 4] Após a formatação, veja as primeiras 5 linhas da coluna '{col}':")
+            print(dataframe_final[col].head(), "\n")
+
+    # Estágio 3: Salvar o resultado
+    try:
+        dataframe_final.to_excel(caminho_saida, index=False, engine='xlsxwriter')
+        print(f"--- PIPELINE CONCLUÍDO. Resultado salvo em: {caminho_saida} ---")
+        return True
+    except Exception as e:
+        print(f"ERRO AO SALVAR O ARQUIVO EXCEL: {e}")
+        return False
