@@ -1,98 +1,70 @@
-# Arquivo: controladores/Classes.py
 import pandas as pd
 from datetime import datetime
-from utils.formatadores import corrigir_data_inteligentemente
+from ..utils.formatadores import corrigir_data_inteligentemente
+from ..config import COLUNAS_PARA_REMOVER, NOMES_EXCLUIR, COLUNA_DATA_CONTRATO_EXCEL, COLUNA_DATA_ADESAO_EXCEL, COLUNA_NOME_EXCEL, COLUNA_RESPONSAVEL_CSV
 
-"""Os prints são mais para saber se algo der errado no codigo, onde exatamente estavamos, lembrete: Apagar os prints(opcional)"""
-
-COLUNAS_DE_DATA = ['DATA_CONTRATO', 'DATA_ADESAO']
 NOVAS_COLUNAS = ['CRM', 'VENDEDOR_TELE', 'CATEGORIA', 'SUBCATEGORIA']
+COLUNAS_DE_DATA = [COLUNA_DATA_CONTRATO_EXCEL, COLUNA_DATA_ADESAO_EXCEL]
 
 class ProcessadorVendas:
-    """
-        Classe responsavel por carregar, limpar, processar e salvar dados de vendas do arquivo csv e excel
-    """
-    def __initi__(self, csv_path: str, excel_path: str):
-        """
-            Inicializa o processaor com os caminhos dos arquivos, nenhum dado é carregado ou processado aqui
-        """
-        print("Objeto ProcessadorVendas criado")
+    def __init__(self, csv_path: str, excel_path: str):
         self.csv_path = csv_path
         self.excel_path = excel_path
-
-        # O estado (os dataframes) iniciam com Nnone, so sera preenchido quando o processamento for executado
-        self.csv_path = None
-        self.excel_path = None
+        self.df_csv = None
+        self.df_excel = None
 
     def _carregar_dados(self):
-        """
-        Metodo privado para carregar os arquivos nos dataframes
-        """
-        print("Iniciando carregamento dos arquivos...")
+        self.df_csv = pd.read_csv(self.csv_path, sep=";", encoding='utf-8-sig', on_bad_lines='skip')
+        self.df_excel = pd.read_excel(self.excel_path, dtype=str)
+        self._normalizar_nomes_colunas()
 
-        self.csv_df = pd.read_csv(self.csv_path, sep=";", encoding='utf-8-sig', on_bad_lines='skip')
-        self.excel_df = pd.read_excel(self.excel_path, dtype=str)
+    def _normalizar_nomes_colunas(self):
+        self.df_excel.columns = [str(col).strip().upper() for col in self.df_excel.columns]
+        self.df_csv.columns = [str(col).strip().upper() for col in self.df_csv.columns]
 
-        print("Arquivos carregados com sucesso!")
+    def _filtrar_csv_por_mes_atual(self):
+        """Filtra do DataFrame do CSV para manter apenas registro do mes e do ano atuais"""
 
-    def _corrigir_datas(self):
-        """
-        Aplica a correção inteligente nas colunas de data
-        """
-        print("Aplicando correção inteligente nas coluanas de datas...")
+        print("Etapa de limpeza: Filtrando CSV por mes atual")
+        coluna_filtro = COLUNA_RESPONSAVEL_CSV.upper()
 
-        for col in COLUNAS_DE_DATA:
-            if col in self.excel_df.columns:
-                self.excel_df[col] = self.excel_df[col].apply(corrigir_data_inteligentemente) 
-
-        print("Datas corrigidas")
-    
-    def _preecnher_novas_colunas(self):
-        """
-        Adiciona colunas vazias no datafram e do excel, as colunas que usaremos para o relatorio, 'CRM', 'VENDEDOR_TELE', 'CATEGORIA', 'SUBCATEGORIA
-        '"""
-
-        print("Adicionando colunas")
-
-        for col in NOVAS_COLUNAS:
-            self.excel_df[col] = None
-
-        print("Novas colunas adicionadas")
-
-    def executar(self):
-        """
-        Orquestra todo o processo de ETL (Extract, transform, Load). Este é o metodo principal a ser chamado, tanto que ele não tem o _ ou seja, não é privado
-        """
-
-        print("Iniciando processamento: ")
-
-        self._carregar_dados()
-        self._corrigir_datas()
-        self._preecnher_novas_colunas()
-
-        print("Processamento concluido com sucesso!")
-
-    def salvar_resultado(self, caminho_saida: str):
-        """
-        Salva o dataframe processado em um novo arquivo excel, formatando as datas de volta para o formato brasileiro padrão DD/MM/AAAA
-        """
-
-        print("salvando os arquivos...")
-
-        if self.excel_df is None:
-            print("Erro: Nenhum dado foi processado. Execute o method .executar() primeiro")
+        if coluna_filtro not in self.df_csv.columns:
+            print(f"Aviso: Colunas '{coluna_filtro}' não encontrada no CSV. Pulando filtro")
             return
         
-        print(f"Salvando arquivos em: {caminho_saida}")
+        hoje = datetime.today()
+        data_da_coluna = pd.to_datetime(self.df_csv[coluna_filtro], errors='coerce')
 
-        df_para_salvar = self.excel_df.copy()
-        # USANDO A CONSTANTE AQUI TAMBEM (PRINCIPIO DRY)
+        mascara_mes_ano_correto = (data_da_coluna.dt.month == hoje.month) & (data_da_coluna.dt.year == hoje.year)
 
+        linhas_antes = len(self.df_csv)
+        self.df_csv = self.df_csv[mascara_mes_ano_correto].copy()
+
+        print(f"CSV filtrado. {linhas_antes - len(self.df_csv)} linhas de meses anteriores ou invalidas removidas")
+
+    def _corrigir_datas(self):
         for col in COLUNAS_DE_DATA:
-            if col in df_para_salvar.columns and pd.api.types.is_datetime64_any_dtype(df_para_salvar[col]):
-                df_para_salvar[col] = df_para_salvar[col].dt.strftime('%d/%m/%Y').replace('NaT', '')
+            if col in self.df_excel.columns:
+                self.df_excel[col] = self.df_excel[col].apply(corrigir_data_inteligentemente)
 
-        df_para_salvar.to_excel(caminho_saida, index=False, engine='xlsxwriter')
+    def _preencher_novas_colunas(self):
+        for col in NOVAS_COLUNAS:
+            if col not in self.df_excel.columns: self.df_excel[col] = None
 
-        print("Arquivo salvo com sucesso")
-                
+    def _remover_colunas_desnecessarias(self):
+        colunas_encontradas = [col for col in COLUNAS_PARA_REMOVER if col in self.df_excel.columns]
+        if colunas_encontradas: self.df_excel.drop(columns=colunas_encontradas, inplace=True)
+
+    def _remover_clientes_excluidos(self):
+        if COLUNA_NOME_EXCEL in self.df_excel.columns:
+            self.df_excel = self.df_excel[~self.df_excel[COLUNA_NOME_EXCEL].str.upper().isin(NOMES_EXCLUIR)].copy()
+
+    def executar(self):
+        print("\n--- Iniciando Processamento (Chef) ---")
+        self._carregar_dados()
+        self._filtrar_csv_por_mes_atual()
+        self._corrigir_datas()
+        self._preencher_novas_colunas()
+        self._remover_clientes_excluidos()
+        self._remover_colunas_desnecessarias()
+        print("--- Processamento do Chef concluído! ---\n")
