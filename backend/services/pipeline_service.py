@@ -11,9 +11,9 @@ def executar_pipeline_completo(csv_path: str, excel_path: str, caminho_saida: st
     Orquestra as grandes etapas do processamento de dados,
     delegando o trabalho pesado para as classes de serviço.
     """
+
     print("--- INICIANDO PIPELINE DE DADOS ---")
 
-    # --- ESTÁGIO 1: O "Chef" faz todo o trabalho de preparação e limpeza. ---
     # Uma única chamada para executar todas as etapas de processamento.
     processador = ProcessadorVendas(csv_path, excel_path)
     processador.executar()
@@ -29,7 +29,6 @@ def executar_pipeline_completo(csv_path: str, excel_path: str, caminho_saida: st
     conciliador = ConciliadorVendas(df_excel=processador.df_excel, df_csv=processador.df_csv)
     dataframe_final = conciliador.enriquecer_dados()
 
-    # --- ESTÁGIO 3: O Pipeline apenas salva o resultado final. ---
     # A operação de salvar é a última coisa que acontece.
     dataframe_final.to_excel(caminho_saida, index=False)
     
